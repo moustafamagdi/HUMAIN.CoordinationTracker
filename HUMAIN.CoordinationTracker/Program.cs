@@ -1,32 +1,66 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
+using System.Xml.Linq;
 
 namespace HUMAIN.CoordinationTracker
 {
     internal class Program
     {
-        private const string ClientId = "cBv3FpuI3rKRAfhYpwSCDsVZTzu8daWXHZduYz4Q0mfttDxo";
-        private const string RedirectUri = "http://localhost:8080/";
+        private static readonly string AppRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "HUMAIN.CoordinationTracker");
 
-        private static readonly string[] Scopes =
-        {
-            "data:read",
-            "account:read"
-        };
+        private static readonly string SnapshotsRoot = Path.Combine(AppRoot, "Snapshots");
+        private static readonly string PowerBiRoot = Path.Combine(AppRoot, "PowerBI");
+        private static readonly string HistoryFile = Path.Combine(AppRoot, "clash_history.csv");
 
         static void Main(string[] args)
         {
             try
             {
-                RunAsync().GetAwaiter().GetResult();
+                Console.OutputEncoding = Encoding.UTF8;
+                EnsureFolders();
+
+                Console.WriteLine("HUMAIN Coordination Tracker");
+                Console.WriteLine("===========================");
+                Console.WriteLine();
+                Console.WriteLine("Navisworks XML Historical Clash Tracker");
+                Console.WriteLine();
+
+                string inputFolder = AskForInputFolder();
+                DateTime snapshotDate = AskForSnapshotDate();
+
+                var imported = ImportSnapshot(inputFolder, snapshotDate);
+
+                if (imported.Count == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("No clash results were found in the selected XML files.");
+                    Console.ResetColor();
+                    Pause();
+                    return;
+                }
+
+                var previousSnapshot = LoadPreviousSnapshot(snapshotDate);
+                var comparison = CompareSnapshots(previousSnapshot, imported);
+
+                SaveSnapshot(snapshotDate, imported);
+                AppendHistory(snapshotDate, imported, comparison);
+                ExportPowerBiFiles(snapshotDate, imported, comparison);
+
+                PrintSummary(snapshotDate, imported, previousSnapshot, comparison);
+
+                Console.WriteLine();
+                Console.WriteLine("Power BI ready files:");
+                Console.WriteLine(PowerBiRoot);
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Import completed successfully.");
+                Console.ResetColor();
             }
             catch (Exception ex)
             {
@@ -34,594 +68,632 @@ namespace HUMAIN.CoordinationTracker
                 Console.WriteLine();
                 Console.WriteLine("ERROR:");
                 Console.WriteLine(ex.Message);
-                Console.WriteLine();
-                Console.WriteLine(ex);
                 Console.ResetColor();
             }
 
+            Pause();
+        }
+
+        private static void EnsureFolders()
+        {
+            Directory.CreateDirectory(AppRoot);
+            Directory.CreateDirectory(SnapshotsRoot);
+            Directory.CreateDirectory(PowerBiRoot);
+        }
+
+        private static string AskForInputFolder()
+        {
+            while (true)
+            {
+                Console.WriteLine("Enter the folder containing Navisworks XML clash reports:");
+                string value = Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    value = value.Trim().Trim('"');
+                    if (Directory.Exists(value))
+                        return value;
+                }
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Folder not found. Try again.");
+                Console.ResetColor();
+                Console.WriteLine();
+            }
+        }
+
+        private static DateTime AskForSnapshotDate()
+        {
+            while (true)
+            {
+                Console.Write("Snapshot date [yyyy-MM-dd] (Enter = today): ");
+                string value = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(value))
+                    return DateTime.Today;
+
+                DateTime date;
+                if (DateTime.TryParseExact(
+                    value.Trim(),
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out date))
+                {
+                    return date.Date;
+                }
+
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Invalid date. Example: 2026-09-09");
+                Console.ResetColor();
+            }
+        }
+
+        private static List<ClashRecord> ImportSnapshot(string folder, DateTime snapshotDate)
+        {
+            string[] files = Directory.GetFiles(folder, "*.xml", SearchOption.AllDirectories);
+
+            Console.WriteLine();
+            Console.WriteLine("XML files found: " + files.Length);
+            Console.WriteLine("Importing...");
+
+            var results = new List<ClashRecord>();
+            int failedFiles = 0;
+
+            foreach (string file in files)
+            {
+                try
+                {
+                    XDocument doc = XDocument.Load(file, LoadOptions.None);
+                    string testName = GetTestName(doc, file);
+
+                    foreach (XElement clash in doc.Descendants().Where(x => LocalName(x) == "clashresult"))
+                    {
+                        string guid = Attr(clash, "guid");
+                        if (string.IsNullOrWhiteSpace(guid))
+                            continue;
+
+                        var record = new ClashRecord
+                        {
+                            SnapshotDate = snapshotDate,
+                            TestName = testName,
+                            ClashGuid = guid,
+                            ClashName = Attr(clash, "name"),
+                            Status = Attr(clash, "status"),
+                            Distance = ParseDouble(Attr(clash, "distance")),
+                            DateFound = ParseDate(Attr(clash, "date")),
+                            GridLocation = ElementValue(clash, "gridlocation"),
+                            Description = ElementValue(clash, "description"),
+                            Comments = ElementValue(clash, "comments")
+                        };
+
+                        XElement point = clash.Descendants().FirstOrDefault(x => LocalName(x) == "clashpoint");
+                        XElement pos = point == null ? null : point.Descendants().FirstOrDefault(x => LocalName(x) == "pos3f");
+                        if (pos != null)
+                        {
+                            record.X = ParseDouble(Attr(pos, "x"));
+                            record.Y = ParseDouble(Attr(pos, "y"));
+                            record.Z = ParseDouble(Attr(pos, "z"));
+                        }
+
+                        var clashObjects = clash.Descendants().Where(x => LocalName(x) == "clashobject").Take(2).ToList();
+                        if (clashObjects.Count > 0)
+                            FillObject(record, clashObjects[0], true);
+                        if (clashObjects.Count > 1)
+                            FillObject(record, clashObjects[1], false);
+
+                        results.Add(record);
+                    }
+                }
+                catch
+                {
+                    failedFiles++;
+                }
+            }
+
+            if (failedFiles > 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Warning: " + failedFiles + " XML file(s) could not be parsed.");
+                Console.ResetColor();
+            }
+
+            return results
+                .GroupBy(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
+                .ToList();
+        }
+
+        private static string GetTestName(XDocument doc, string file)
+        {
+            XElement clashTest = doc.Descendants().FirstOrDefault(x => LocalName(x) == "clashtest");
+            string name = clashTest == null ? null : Attr(clashTest, "name");
+
+            if (!string.IsNullOrWhiteSpace(name))
+                return name.Trim();
+
+            XElement batchTest = doc.Descendants().FirstOrDefault(x => LocalName(x) == "batchtest");
+            name = batchTest == null ? null : Attr(batchTest, "name");
+
+            return string.IsNullOrWhiteSpace(name)
+                ? Path.GetFileNameWithoutExtension(file)
+                : name.Trim();
+        }
+
+        private static void FillObject(ClashRecord record, XElement clashObject, bool first)
+        {
+            string objectName = FirstNonEmpty(
+                ElementValue(clashObject, "objectname"),
+                ElementValue(clashObject, "smarttags"));
+
+            string itemId = FindSmartTag(clashObject, "Item ID");
+            string layer = FindSmartTag(clashObject, "Layer");
+            string itemPath = FindSmartTag(clashObject, "Item Path");
+
+            if (first)
+            {
+                record.ItemAName = objectName;
+                record.ItemAElementId = itemId;
+                record.ItemALayer = layer;
+                record.ItemAPath = itemPath;
+            }
+            else
+            {
+                record.ItemBName = objectName;
+                record.ItemBElementId = itemId;
+                record.ItemBLayer = layer;
+                record.ItemBPath = itemPath;
+            }
+        }
+
+        private static string FindSmartTag(XElement clashObject, string tagName)
+        {
+            foreach (XElement smartTag in clashObject.Descendants().Where(x => LocalName(x) == "smarttag"))
+            {
+                string name = ElementValue(smartTag, "name");
+                if (string.Equals(name, tagName, StringComparison.OrdinalIgnoreCase))
+                    return ElementValue(smartTag, "value");
+            }
+
+            return string.Empty;
+        }
+
+        private static List<ClashRecord> LoadPreviousSnapshot(DateTime currentDate)
+        {
+            var dirs = Directory.GetDirectories(SnapshotsRoot)
+                .Select(Path.GetFileName)
+                .Select(x =>
+                {
+                    DateTime date;
+                    bool ok = DateTime.TryParseExact(x, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+                    return new { Name = x, Date = date, Valid = ok };
+                })
+                .Where(x => x.Valid && x.Date < currentDate)
+                .OrderByDescending(x => x.Date)
+                .ToList();
+
+            if (dirs.Count == 0)
+                return new List<ClashRecord>();
+
+            string file = Path.Combine(SnapshotsRoot, dirs[0].Name, "snapshot.csv");
+            return File.Exists(file) ? ReadSnapshotCsv(file) : new List<ClashRecord>();
+        }
+
+        private static ComparisonResult CompareSnapshots(List<ClashRecord> previous, List<ClashRecord> current)
+        {
+            var previousMap = previous.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
+            var currentMap = current.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
+
+            var result = new ComparisonResult();
+
+            foreach (ClashRecord c in current)
+            {
+                if (previousMap.ContainsKey(c.ClashGuid))
+                    result.StateByGuid[c.ClashGuid] = "Existing";
+                else
+                    result.StateByGuid[c.ClashGuid] = "New";
+            }
+
+            foreach (ClashRecord p in previous)
+            {
+                if (!currentMap.ContainsKey(p.ClashGuid))
+                    result.Disappeared.Add(p);
+            }
+
+            return result;
+        }
+
+        private static void SaveSnapshot(DateTime date, List<ClashRecord> records)
+        {
+            string folder = Path.Combine(SnapshotsRoot, date.ToString("yyyy-MM-dd"));
+            Directory.CreateDirectory(folder);
+
+            string file = Path.Combine(folder, "snapshot.csv");
+            WriteClashCsv(file, records, null);
+        }
+
+        private static void AppendHistory(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        {
+            bool writeHeader = !File.Exists(HistoryFile);
+
+            using (var writer = new StreamWriter(HistoryFile, true, new UTF8Encoding(true)))
+            {
+                if (writeHeader)
+                {
+                    writer.WriteLine("SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments");
+                }
+
+                foreach (ClashRecord r in current)
+                {
+                    string state;
+                    if (!comparison.StateByGuid.TryGetValue(r.ClashGuid, out state))
+                        state = "Existing";
+
+                    writer.WriteLine(ToHistoryCsvLine(r, state));
+                }
+
+                foreach (ClashRecord r in comparison.Disappeared)
+                {
+                    var disappeared = r.CloneForDate(date);
+                    writer.WriteLine(ToHistoryCsvLine(disappeared, "Disappeared"));
+                }
+            }
+        }
+
+        private static void ExportPowerBiFiles(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        {
+            WriteClashCsv(Path.Combine(PowerBiRoot, "CurrentClashes.csv"), current, comparison.StateByGuid);
+            ExportDailyProgress(date, current, comparison);
+            ExportTestPerformance(date, current, comparison);
+            File.Copy(HistoryFile, Path.Combine(PowerBiRoot, "ClashHistory.csv"), true);
+        }
+
+        private static void ExportDailyProgress(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        {
+            string file = Path.Combine(PowerBiRoot, "DailyProgress.csv");
+            bool writeHeader = !File.Exists(file);
+
+            int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
+            int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
+            int disappeared = comparison.Disappeared.Count;
+            int previous = existing + disappeared;
+            int currentCount = current.Count;
+            int netChange = currentCount - previous;
+
+            using (var writer = new StreamWriter(file, true, new UTF8Encoding(true)))
+            {
+                if (writeHeader)
+                    writer.WriteLine("SnapshotDate,Previous,Current,New,Existing,Disappeared,NetChange");
+
+                writer.WriteLine(string.Join(",", new[]
+                {
+                    Csv(date.ToString("yyyy-MM-dd")),
+                    previous.ToString(CultureInfo.InvariantCulture),
+                    currentCount.ToString(CultureInfo.InvariantCulture),
+                    newCount.ToString(CultureInfo.InvariantCulture),
+                    existing.ToString(CultureInfo.InvariantCulture),
+                    disappeared.ToString(CultureInfo.InvariantCulture),
+                    netChange.ToString(CultureInfo.InvariantCulture)
+                }));
+            }
+        }
+
+        private static void ExportTestPerformance(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        {
+            string file = Path.Combine(PowerBiRoot, "TestPerformance.csv");
+            bool writeHeader = !File.Exists(file);
+
+            var currentByTest = current.GroupBy(x => x.TestName).ToDictionary(g => g.Key, g => g.ToList());
+            var disappearedByTest = comparison.Disappeared.GroupBy(x => x.TestName).ToDictionary(g => g.Key, g => g.Count());
+
+            using (var writer = new StreamWriter(file, true, new UTF8Encoding(true)))
+            {
+                if (writeHeader)
+                    writer.WriteLine("SnapshotDate,TestName,Current,New,Existing,Disappeared,Previous,NetChange");
+
+                foreach (var kvp in currentByTest.OrderBy(x => x.Key))
+                {
+                    int currentCount = kvp.Value.Count;
+                    int newCount = kvp.Value.Count(x => comparison.StateByGuid.ContainsKey(x.ClashGuid) && comparison.StateByGuid[x.ClashGuid] == "New");
+                    int existing = currentCount - newCount;
+                    int disappeared = disappearedByTest.ContainsKey(kvp.Key) ? disappearedByTest[kvp.Key] : 0;
+                    int previous = existing + disappeared;
+                    int net = currentCount - previous;
+
+                    writer.WriteLine(string.Join(",", new[]
+                    {
+                        Csv(date.ToString("yyyy-MM-dd")),
+                        Csv(kvp.Key),
+                        currentCount.ToString(CultureInfo.InvariantCulture),
+                        newCount.ToString(CultureInfo.InvariantCulture),
+                        existing.ToString(CultureInfo.InvariantCulture),
+                        disappeared.ToString(CultureInfo.InvariantCulture),
+                        previous.ToString(CultureInfo.InvariantCulture),
+                        net.ToString(CultureInfo.InvariantCulture)
+                    }));
+                }
+            }
+        }
+
+        private static void WriteClashCsv(string file, List<ClashRecord> records, Dictionary<string, string> states)
+        {
+            using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
+            {
+                writer.WriteLine("SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments");
+
+                foreach (ClashRecord r in records)
+                {
+                    string state = string.Empty;
+                    if (states != null)
+                        states.TryGetValue(r.ClashGuid, out state);
+
+                    writer.WriteLine(ToHistoryCsvLine(r, state));
+                }
+            }
+        }
+
+        private static List<ClashRecord> ReadSnapshotCsv(string file)
+        {
+            var records = new List<ClashRecord>();
+            bool first = true;
+
+            foreach (string line in File.ReadLines(file))
+            {
+                if (first)
+                {
+                    first = false;
+                    continue;
+                }
+
+                List<string> values = ParseCsvLine(line);
+                if (values.Count < 21)
+                    continue;
+
+                records.Add(new ClashRecord
+                {
+                    SnapshotDate = ParseDate(values[0]) ?? DateTime.MinValue,
+                    TestName = values[1],
+                    ClashGuid = values[2],
+                    Status = values[4],
+                    Distance = ParseNullableDouble(values[5]),
+                    DateFound = ParseDate(values[6]),
+                    GridLocation = values[7],
+                    X = ParseNullableDouble(values[8]),
+                    Y = ParseNullableDouble(values[9]),
+                    Z = ParseNullableDouble(values[10]),
+                    ItemAElementId = values[11],
+                    ItemAName = values[12],
+                    ItemALayer = values[13],
+                    ItemAPath = values[14],
+                    ItemBElementId = values[15],
+                    ItemBName = values[16],
+                    ItemBLayer = values[17],
+                    ItemBPath = values[18],
+                    Description = values[19],
+                    Comments = values[20]
+                });
+            }
+
+            return records;
+        }
+
+        private static string ToHistoryCsvLine(ClashRecord r, string trackerState)
+        {
+            return string.Join(",", new[]
+            {
+                Csv(r.SnapshotDate.ToString("yyyy-MM-dd")),
+                Csv(r.TestName),
+                Csv(r.ClashGuid),
+                Csv(trackerState),
+                Csv(r.Status),
+                Number(r.Distance),
+                Csv(r.DateFound.HasValue ? r.DateFound.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty),
+                Csv(r.GridLocation),
+                Number(r.X),
+                Number(r.Y),
+                Number(r.Z),
+                Csv(r.ItemAElementId),
+                Csv(r.ItemAName),
+                Csv(r.ItemALayer),
+                Csv(r.ItemAPath),
+                Csv(r.ItemBElementId),
+                Csv(r.ItemBName),
+                Csv(r.ItemBLayer),
+                Csv(r.ItemBPath),
+                Csv(r.Description),
+                Csv(r.Comments)
+            });
+        }
+
+        private static void PrintSummary(DateTime date, List<ClashRecord> current, List<ClashRecord> previous, ComparisonResult comparison)
+        {
+            int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
+            int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
+            int disappeared = comparison.Disappeared.Count;
+
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("SNAPSHOT SUMMARY");
+            Console.WriteLine("================");
+            Console.ResetColor();
+            Console.WriteLine("Date        : " + date.ToString("yyyy-MM-dd"));
+            Console.WriteLine("Clash Tests : " + current.Select(x => x.TestName).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            Console.WriteLine("Previous    : " + previous.Count);
+            Console.WriteLine("Current     : " + current.Count);
+            Console.WriteLine("New         : " + newCount);
+            Console.WriteLine("Existing    : " + existing);
+            Console.WriteLine("Disappeared : " + disappeared);
+            Console.WriteLine("Net Change  : " + (current.Count - previous.Count));
+        }
+
+        private static string Attr(XElement element, string name)
+        {
+            XAttribute attr = element.Attributes().FirstOrDefault(x => string.Equals(x.Name.LocalName, name, StringComparison.OrdinalIgnoreCase));
+            return attr == null ? string.Empty : attr.Value;
+        }
+
+        private static string ElementValue(XElement parent, string name)
+        {
+            XElement element = parent.Descendants().FirstOrDefault(x => string.Equals(LocalName(x), name, StringComparison.OrdinalIgnoreCase));
+            return element == null ? string.Empty : (element.Value ?? string.Empty).Trim();
+        }
+
+        private static string LocalName(XElement element)
+        {
+            return element.Name.LocalName;
+        }
+
+        private static DateTime? ParseDate(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            DateTime date;
+            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out date))
+                return date;
+            if (DateTime.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces, out date))
+                return date;
+
+            return null;
+        }
+
+        private static double? ParseDouble(string value)
+        {
+            double number;
+            if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out number))
+                return number;
+            if (double.TryParse(value, NumberStyles.Any, CultureInfo.CurrentCulture, out number))
+                return number;
+            return null;
+        }
+
+        private static double? ParseNullableDouble(string value)
+        {
+            return ParseDouble(value);
+        }
+
+        private static string Number(double? value)
+        {
+            return value.HasValue ? value.Value.ToString("0.############", CultureInfo.InvariantCulture) : string.Empty;
+        }
+
+        private static string Csv(string value)
+        {
+            value = value ?? string.Empty;
+            return "\"" + value.Replace("\"", "\"\"") + "\"";
+        }
+
+        private static string FirstNonEmpty(params string[] values)
+        {
+            return values.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
+        }
+
+        private static List<string> ParseCsvLine(string line)
+        {
+            var values = new List<string>();
+            var sb = new StringBuilder();
+            bool quoted = false;
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+
+                if (c == '"')
+                {
+                    if (quoted && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        sb.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        quoted = !quoted;
+                    }
+                }
+                else if (c == ',' && !quoted)
+                {
+                    values.Add(sb.ToString());
+                    sb.Clear();
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            values.Add(sb.ToString());
+            return values;
+        }
+
+        private static void Pause()
+        {
             Console.WriteLine();
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
 
-        private static async Task RunAsync()
+        private class ComparisonResult
         {
-            Console.WriteLine("HUMAIN Coordination Tracker");
-            Console.WriteLine("===========================");
-            Console.WriteLine();
+            public Dictionary<string, string> StateByGuid { get; private set; }
+            public List<ClashRecord> Disappeared { get; private set; }
 
-            string codeVerifier = GenerateCodeVerifier();
-            string codeChallenge = GenerateCodeChallenge(codeVerifier);
-            string state = Guid.NewGuid().ToString("N");
-
-            string scope = string.Join(" ", Scopes);
-
-            string authorizationUrl =
-                "https://developer.api.autodesk.com/authentication/v2/authorize" +
-                "?response_type=code" +
-                "&client_id=" + Uri.EscapeDataString(ClientId) +
-                "&redirect_uri=" + Uri.EscapeDataString(RedirectUri) +
-                "&scope=" + Uri.EscapeDataString(scope) +
-                "&state=" + Uri.EscapeDataString(state) +
-                "&code_challenge=" + Uri.EscapeDataString(codeChallenge) +
-                "&code_challenge_method=S256";
-
-            using (HttpListener listener = new HttpListener())
+            public ComparisonResult()
             {
-                listener.Prefixes.Add(RedirectUri);
-                listener.Start();
+                StateByGuid = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                Disappeared = new List<ClashRecord>();
+            }
+        }
 
-                Console.WriteLine("Opening Autodesk login...");
-                Console.WriteLine();
+        private class ClashRecord
+        {
+            public DateTime SnapshotDate { get; set; }
+            public string TestName { get; set; }
+            public string ClashGuid { get; set; }
+            public string ClashName { get; set; }
+            public string Status { get; set; }
+            public double? Distance { get; set; }
+            public DateTime? DateFound { get; set; }
+            public string GridLocation { get; set; }
+            public double? X { get; set; }
+            public double? Y { get; set; }
+            public double? Z { get; set; }
+            public string ItemAElementId { get; set; }
+            public string ItemAName { get; set; }
+            public string ItemALayer { get; set; }
+            public string ItemAPath { get; set; }
+            public string ItemBElementId { get; set; }
+            public string ItemBName { get; set; }
+            public string ItemBLayer { get; set; }
+            public string ItemBPath { get; set; }
+            public string Description { get; set; }
+            public string Comments { get; set; }
 
-                Process.Start(new ProcessStartInfo
+            public ClashRecord CloneForDate(DateTime date)
+            {
+                return new ClashRecord
                 {
-                    FileName = authorizationUrl,
-                    UseShellExecute = true
-                });
-
-                Console.WriteLine("Waiting for Autodesk authorization...");
-
-                HttpListenerContext context =
-                    await listener.GetContextAsync();
-
-                string returnedState =
-                    context.Request.QueryString["state"];
-
-                string code =
-                    context.Request.QueryString["code"];
-
-                string error =
-                    context.Request.QueryString["error"];
-
-                if (!string.IsNullOrWhiteSpace(error))
-                {
-                    await SendBrowserResponse(
-                        context,
-                        "<html><body style='font-family:Segoe UI'>" +
-                        "<h2>Autodesk login failed.</h2>" +
-                        "<p>You can close this browser window.</p>" +
-                        "</body></html>");
-
-                    throw new Exception(
-                        "Autodesk authorization error: " + error);
-                }
-
-                if (returnedState != state)
-                {
-                    await SendBrowserResponse(
-                        context,
-                        "<html><body style='font-family:Segoe UI'>" +
-                        "<h2>Security validation failed.</h2>" +
-                        "<p>You can close this browser window.</p>" +
-                        "</body></html>");
-
-                    throw new Exception(
-                        "OAuth state validation failed.");
-                }
-
-                if (string.IsNullOrWhiteSpace(code))
-                {
-                    throw new Exception(
-                        "No authorization code was returned.");
-                }
-
-                await SendBrowserResponse(
-                    context,
-                    "<html><body style='font-family:Segoe UI'>" +
-                    "<h2>Autodesk login successful.</h2>" +
-                    "<p>You can close this window and return to HUMAIN Coordination Tracker.</p>" +
-                    "</body></html>");
-
-                listener.Stop();
-
-                Console.WriteLine("Authorization code received.");
-                Console.WriteLine("Requesting access token...");
-
-                TokenResponse token =
-                    await ExchangeCodeForToken(
-                        code,
-                        codeVerifier);
-
-                Console.ForegroundColor =
-                    ConsoleColor.Green;
-
-                Console.WriteLine();
-                Console.WriteLine(
-                    "================================");
-
-                Console.WriteLine(
-                    "AUTODESK LOGIN SUCCESSFUL");
-
-                Console.WriteLine(
-                    "================================");
-
-                Console.ResetColor();
-
-                Console.WriteLine(
-                    "Token Type : " +
-                    token.token_type);
-
-                Console.WriteLine(
-                    "Expires In : " +
-                    token.expires_in +
-                    " seconds");
-
-                Console.WriteLine();
-                Console.WriteLine(
-                    "Access token received successfully.");
-
-                Console.WriteLine(
-                    "The token itself is intentionally NOT displayed.");
-
-                Console.WriteLine();
-                Console.WriteLine(
-                    "Reading Autodesk hubs...");
-
-                Console.WriteLine();
-
-                await GetHubsAndProjects(
-                    token.access_token);
-            }
-        }
-
-        private static async Task<TokenResponse>
-            ExchangeCodeForToken(
-                string authorizationCode,
-                string codeVerifier)
-        {
-            using (HttpClient client =
-                new HttpClient())
-            {
-                Dictionary<string, string> values =
-                    new Dictionary<string, string>
-                    {
-                        {
-                            "grant_type",
-                            "authorization_code"
-                        },
-                        {
-                            "client_id",
-                            ClientId
-                        },
-                        {
-                            "code",
-                            authorizationCode
-                        },
-                        {
-                            "redirect_uri",
-                            RedirectUri
-                        },
-                        {
-                            "code_verifier",
-                            codeVerifier
-                        }
-                    };
-
-                using (FormUrlEncodedContent content =
-                    new FormUrlEncodedContent(values))
-                {
-                    HttpResponseMessage response =
-                        await client.PostAsync(
-                            "https://developer.api.autodesk.com/authentication/v2/token",
-                            content);
-
-                    string responseText =
-                        await response.Content.ReadAsStringAsync();
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        throw new Exception(
-                            "Token request failed." +
-                            Environment.NewLine +
-                            "HTTP " +
-                            (int)response.StatusCode +
-                            Environment.NewLine +
-                            responseText);
-                    }
-
-                    JavaScriptSerializer serializer =
-                        new JavaScriptSerializer();
-
-                    TokenResponse token =
-                        serializer.Deserialize<TokenResponse>(
-                            responseText);
-
-                    if (token == null ||
-                        string.IsNullOrWhiteSpace(
-                            token.access_token))
-                    {
-                        throw new Exception(
-                            "Access token was not returned.");
-                    }
-
-                    return token;
-                }
-            }
-        }
-
-        private static async Task
-            GetHubsAndProjects(
-                string accessToken)
-        {
-            using (HttpClient client =
-                new HttpClient())
-            {
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue(
-                        "Bearer",
-                        accessToken);
-
-                client.DefaultRequestHeaders.Add(
-                    "User-Agent",
-                    "HUMAIN-Coordination-Tracker");
-
-                HttpResponseMessage response =
-                    await client.GetAsync(
-                        "https://developer.api.autodesk.com/project/v1/hubs");
-
-                string json =
-                    await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception(
-                        "Failed to read Autodesk hubs." +
-                        Environment.NewLine +
-                        "HTTP " +
-                        (int)response.StatusCode +
-                        Environment.NewLine +
-                        json);
-                }
-
-                JavaScriptSerializer serializer =
-                    new JavaScriptSerializer();
-
-                HubsResponse hubs =
-                    serializer.Deserialize<HubsResponse>(
-                        json);
-
-                if (hubs == null ||
-                    hubs.data == null ||
-                    hubs.data.Count == 0)
-                {
-                    Console.WriteLine(
-                        "No hubs were returned.");
-
-                    return;
-                }
-
-                Console.ForegroundColor =
-                    ConsoleColor.Cyan;
-
-                Console.WriteLine(
-                    "AUTODESK HUBS");
-
-                Console.WriteLine(
-                    "==============");
-
-                Console.ResetColor();
-
-                foreach (HubData hub in hubs.data)
-                {
-                    Console.WriteLine();
-
-                    Console.WriteLine(
-                        "Hub Name : " +
-                        GetHubName(hub));
-
-                    Console.WriteLine(
-                        "Hub ID   : " +
-                        hub.id);
-
-                    await GetProjects(
-                        client,
-                        hub.id);
-                }
-            }
-        }
-
-        private static async Task
-            GetProjects(
-                HttpClient client,
-                string hubId)
-        {
-            string url =
-                "https://developer.api.autodesk.com/project/v1/hubs/" +
-                Uri.EscapeDataString(hubId) +
-                "/projects";
-
-            HttpResponseMessage response =
-                await client.GetAsync(url);
-
-            string json =
-                await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.ForegroundColor =
-                    ConsoleColor.Yellow;
-
-                Console.WriteLine(
-                    "Could not read projects from this hub.");
-
-                Console.WriteLine(
-                    "HTTP " +
-                    (int)response.StatusCode);
-
-                Console.WriteLine(json);
-
-                Console.ResetColor();
-
-                return;
-            }
-
-            JavaScriptSerializer serializer =
-                new JavaScriptSerializer();
-
-            ProjectsResponse projects =
-                serializer.Deserialize<ProjectsResponse>(
-                    json);
-
-            if (projects == null ||
-                projects.data == null ||
-                projects.data.Count == 0)
-            {
-                Console.WriteLine(
-                    "  No projects returned.");
-
-                return;
-            }
-
-            foreach (ProjectData project
-                in projects.data)
-            {
-                string projectName =
-                    GetProjectName(project);
-
-                if (projectName.IndexOf(
-                    "HUMAIN",
-                    StringComparison.OrdinalIgnoreCase)
-                    >= 0)
-                {
-                    Console.WriteLine();
-
-                    Console.ForegroundColor =
-                        ConsoleColor.Green;
-
-                    Console.WriteLine(
-                        ">>> HUMAIN PROJECT FOUND <<<");
-
-                    Console.WriteLine(
-                        "Project Name : " +
-                        projectName);
-
-                    Console.WriteLine(
-                        "Project ID   : " +
-                        project.id);
-
-                    Console.ResetColor();
-                }
-                else
-                {
-                    Console.WriteLine(
-                        "  Project: " +
-                        projectName);
-                }
-            }
-        }
-
-        private static string GetHubName(
-            HubData hub)
-        {
-            if (hub == null)
-                return "(Unknown)";
-
-            if (hub.attributes == null)
-                return "(Unknown)";
-
-            if (string.IsNullOrWhiteSpace(
-                hub.attributes.name))
-                return "(Unknown)";
-
-            return hub.attributes.name;
-        }
-
-        private static string GetProjectName(
-            ProjectData project)
-        {
-            if (project == null)
-                return "(Unknown)";
-
-            if (project.attributes == null)
-                return "(Unknown)";
-
-            if (string.IsNullOrWhiteSpace(
-                project.attributes.name))
-                return "(Unknown)";
-
-            return project.attributes.name;
-        }
-
-        private static async Task
-            SendBrowserResponse(
-                HttpListenerContext context,
-                string html)
-        {
-            byte[] buffer =
-                Encoding.UTF8.GetBytes(html);
-
-            context.Response.ContentType =
-                "text/html; charset=utf-8";
-
-            context.Response.ContentLength64 =
-                buffer.Length;
-
-            await context.Response.OutputStream
-                .WriteAsync(
-                    buffer,
-                    0,
-                    buffer.Length);
-
-            context.Response.OutputStream.Close();
-        }
-
-        private static string
-            GenerateCodeVerifier()
-        {
-            byte[] bytes =
-                new byte[32];
-
-            using (RandomNumberGenerator rng =
-                RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(bytes);
-            }
-
-            return Base64UrlEncode(bytes);
-        }
-
-        private static string
-            GenerateCodeChallenge(
-                string verifier)
-        {
-            byte[] bytes =
-                Encoding.ASCII.GetBytes(
-                    verifier);
-
-            byte[] hash;
-
-            using (SHA256 sha256 =
-                SHA256.Create())
-            {
-                hash =
-                    sha256.ComputeHash(bytes);
-            }
-
-            return Base64UrlEncode(hash);
-        }
-
-        private static string
-            Base64UrlEncode(
-                byte[] bytes)
-        {
-            return Convert
-                .ToBase64String(bytes)
-                .TrimEnd('=')
-                .Replace('+', '-')
-                .Replace('/', '_');
-        }
-
-        private class TokenResponse
-        {
-            public string token_type
-            {
-                get;
-                set;
-            }
-
-            public int expires_in
-            {
-                get;
-                set;
-            }
-
-            public string access_token
-            {
-                get;
-                set;
-            }
-
-            public string refresh_token
-            {
-                get;
-                set;
-            }
-        }
-
-        private class HubsResponse
-        {
-            public List<HubData> data
-            {
-                get;
-                set;
-            }
-        }
-
-        private class HubData
-        {
-            public string id
-            {
-                get;
-                set;
-            }
-
-            public HubAttributes attributes
-            {
-                get;
-                set;
-            }
-        }
-
-        private class HubAttributes
-        {
-            public string name
-            {
-                get;
-                set;
-            }
-        }
-
-        private class ProjectsResponse
-        {
-            public List<ProjectData> data
-            {
-                get;
-                set;
-            }
-        }
-
-        private class ProjectData
-        {
-            public string id
-            {
-                get;
-                set;
-            }
-
-            public ProjectAttributes attributes
-            {
-                get;
-                set;
-            }
-        }
-
-        private class ProjectAttributes
-        {
-            public string name
-            {
-                get;
-                set;
+                    SnapshotDate = date,
+                    TestName = TestName,
+                    ClashGuid = ClashGuid,
+                    ClashName = ClashName,
+                    Status = Status,
+                    Distance = Distance,
+                    DateFound = DateFound,
+                    GridLocation = GridLocation,
+                    X = X,
+                    Y = Y,
+                    Z = Z,
+                    ItemAElementId = ItemAElementId,
+                    ItemAName = ItemAName,
+                    ItemALayer = ItemALayer,
+                    ItemAPath = ItemAPath,
+                    ItemBElementId = ItemBElementId,
+                    ItemBName = ItemBName,
+                    ItemBLayer = ItemBLayer,
+                    ItemBPath = ItemBPath,
+                    Description = Description,
+                    Comments = Comments
+                };
             }
         }
     }
