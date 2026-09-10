@@ -34,25 +34,25 @@ namespace HUMAIN.CoordinationTracker
                 string inputFolder = AskForInputFolder();
                 DateTime snapshotDate = AskForSnapshotDate();
 
-                var imported = ImportSnapshot(inputFolder, snapshotDate);
+                SnapshotData imported = ImportSnapshot(inputFolder, snapshotDate);
 
-                if (imported.Count == 0)
+                if (imported.Records.Count == 0 && imported.Tests.Count == 0)
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("No clash results were found in the selected XML files.");
+                    Console.WriteLine("No clash tests or clash results were found in the selected XML files.");
                     Console.ResetColor();
                     Pause();
                     return;
                 }
 
-                var previousSnapshot = LoadPreviousSnapshot(snapshotDate);
-                var comparison = CompareSnapshots(previousSnapshot, imported);
+                SnapshotData previous = LoadPreviousSnapshot(snapshotDate);
+                HashSet<string> everSeenBefore = LoadEverSeenBefore(snapshotDate);
+                ComparisonResult comparison = CompareSnapshots(previous.Records, imported.Records, everSeenBefore);
 
                 SaveSnapshot(snapshotDate, imported);
-                AppendHistory(snapshotDate, imported, comparison);
-                ExportPowerBiFiles(snapshotDate, imported, comparison);
+                RebuildDerivedFiles();
 
-                PrintSummary(snapshotDate, imported, previousSnapshot, comparison);
+                PrintSummary(snapshotDate, imported, previous, comparison);
 
                 Console.WriteLine();
                 Console.WriteLine("Power BI ready files:");
@@ -129,7 +129,7 @@ namespace HUMAIN.CoordinationTracker
             }
         }
 
-        private static List<ClashRecord> ImportSnapshot(string folder, DateTime snapshotDate)
+        private static SnapshotData ImportSnapshot(string folder, DateTime snapshotDate)
         {
             string[] files = Directory.GetFiles(folder, "*.xml", SearchOption.AllDirectories);
 
@@ -138,6 +138,7 @@ namespace HUMAIN.CoordinationTracker
             Console.WriteLine("Importing...");
 
             var results = new List<ClashRecord>();
+            var tests = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             int failedFiles = 0;
 
             foreach (string file in files)
@@ -146,6 +147,7 @@ namespace HUMAIN.CoordinationTracker
                 {
                     XDocument doc = XDocument.Load(file, LoadOptions.None);
                     string testName = GetTestName(doc, file);
+                    tests.Add(testName);
 
                     foreach (XElement clash in doc.Descendants().Where(x => LocalName(x) == "clashresult"))
                     {
@@ -185,9 +187,13 @@ namespace HUMAIN.CoordinationTracker
                         results.Add(record);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     failedFiles++;
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Could not parse: " + Path.GetFileName(file));
+                    Console.WriteLine("  " + ex.Message);
+                    Console.ResetColor();
                 }
             }
 
@@ -198,10 +204,15 @@ namespace HUMAIN.CoordinationTracker
                 Console.ResetColor();
             }
 
-            return results
-                .GroupBy(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase)
-                .Select(g => g.First())
-                .ToList();
+            return new SnapshotData
+            {
+                Date = snapshotDate,
+                Records = results
+                    .GroupBy(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.First())
+                    .ToList(),
+                Tests = tests.OrderBy(x => x).ToList()
+            };
         }
 
         private static string GetTestName(XDocument doc, string file)
@@ -224,7 +235,7 @@ namespace HUMAIN.CoordinationTracker
         {
             string objectName = FirstNonEmpty(
                 ElementValue(clashObject, "objectname"),
-                ElementValue(clashObject, "smarttags"));
+                FindSmartTag(clashObject, "Item Name"));
 
             string itemId = FindSmartTag(clashObject, "Item ID");
             string layer = FindSmartTag(clashObject, "Layer");
@@ -258,38 +269,38 @@ namespace HUMAIN.CoordinationTracker
             return string.Empty;
         }
 
-        private static List<ClashRecord> LoadPreviousSnapshot(DateTime currentDate)
+        private static SnapshotData LoadPreviousSnapshot(DateTime currentDate)
         {
-            var dirs = Directory.GetDirectories(SnapshotsRoot)
-                .Select(Path.GetFileName)
-                .Select(x =>
-                {
-                    DateTime date;
-                    bool ok = DateTime.TryParseExact(x, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
-                    return new { Name = x, Date = date, Valid = ok };
-                })
-                .Where(x => x.Valid && x.Date < currentDate)
-                .OrderByDescending(x => x.Date)
-                .ToList();
-
-            if (dirs.Count == 0)
-                return new List<ClashRecord>();
-
-            string file = Path.Combine(SnapshotsRoot, dirs[0].Name, "snapshot.csv");
-            return File.Exists(file) ? ReadSnapshotCsv(file) : new List<ClashRecord>();
+            var dates = GetSnapshotDates().Where(x => x < currentDate).OrderByDescending(x => x).ToList();
+            return dates.Count == 0 ? SnapshotData.Empty() : LoadSnapshot(dates[0]);
         }
 
-        private static ComparisonResult CompareSnapshots(List<ClashRecord> previous, List<ClashRecord> current)
+        private static HashSet<string> LoadEverSeenBefore(DateTime currentDate)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (DateTime date in GetSnapshotDates().Where(x => x < currentDate).OrderBy(x => x))
+            {
+                foreach (ClashRecord record in LoadSnapshot(date).Records)
+                    set.Add(record.ClashGuid);
+            }
+            return set;
+        }
+
+        private static ComparisonResult CompareSnapshots(
+            List<ClashRecord> previous,
+            List<ClashRecord> current,
+            HashSet<string> everSeenBefore)
         {
             var previousMap = previous.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
             var currentMap = current.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
-
             var result = new ComparisonResult();
 
             foreach (ClashRecord c in current)
             {
                 if (previousMap.ContainsKey(c.ClashGuid))
                     result.StateByGuid[c.ClashGuid] = "Existing";
+                else if (everSeenBefore.Contains(c.ClashGuid))
+                    result.StateByGuid[c.ClashGuid] = "Reopened";
                 else
                     result.StateByGuid[c.ClashGuid] = "New";
             }
@@ -297,129 +308,237 @@ namespace HUMAIN.CoordinationTracker
             foreach (ClashRecord p in previous)
             {
                 if (!currentMap.ContainsKey(p.ClashGuid))
-                    result.Disappeared.Add(p);
+                    result.Resolved.Add(p);
             }
 
             return result;
         }
 
-        private static void SaveSnapshot(DateTime date, List<ClashRecord> records)
+        private static void SaveSnapshot(DateTime date, SnapshotData snapshot)
         {
             string folder = Path.Combine(SnapshotsRoot, date.ToString("yyyy-MM-dd"));
+            bool replacing = Directory.Exists(folder);
             Directory.CreateDirectory(folder);
 
-            string file = Path.Combine(folder, "snapshot.csv");
-            WriteClashCsv(file, records, null);
-        }
+            WriteClashCsv(Path.Combine(folder, "snapshot.csv"), snapshot.Records, null);
 
-        private static void AppendHistory(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
-        {
-            bool writeHeader = !File.Exists(HistoryFile);
-
-            using (var writer = new StreamWriter(HistoryFile, true, new UTF8Encoding(true)))
+            using (var writer = new StreamWriter(Path.Combine(folder, "tests.csv"), false, new UTF8Encoding(true)))
             {
-                if (writeHeader)
-                {
-                    writer.WriteLine("SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments");
-                }
+                writer.WriteLine("TestName");
+                foreach (string test in snapshot.Tests.OrderBy(x => x))
+                    writer.WriteLine(Csv(test));
+            }
 
-                foreach (ClashRecord r in current)
-                {
-                    string state;
-                    if (!comparison.StateByGuid.TryGetValue(r.ClashGuid, out state))
-                        state = "Existing";
-
-                    writer.WriteLine(ToHistoryCsvLine(r, state));
-                }
-
-                foreach (ClashRecord r in comparison.Disappeared)
-                {
-                    var disappeared = r.CloneForDate(date);
-                    writer.WriteLine(ToHistoryCsvLine(disappeared, "Disappeared"));
-                }
+            if (replacing)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Existing snapshot for " + date.ToString("yyyy-MM-dd") + " was replaced.");
+                Console.ResetColor();
             }
         }
 
-        private static void ExportPowerBiFiles(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        private static List<DateTime> GetSnapshotDates()
         {
-            WriteClashCsv(Path.Combine(PowerBiRoot, "CurrentClashes.csv"), current, comparison.StateByGuid);
-            ExportDailyProgress(date, current, comparison);
-            ExportTestPerformance(date, current, comparison);
-            File.Copy(HistoryFile, Path.Combine(PowerBiRoot, "ClashHistory.csv"), true);
+            if (!Directory.Exists(SnapshotsRoot))
+                return new List<DateTime>();
+
+            return Directory.GetDirectories(SnapshotsRoot)
+                .Select(Path.GetFileName)
+                .Select(x =>
+                {
+                    DateTime date;
+                    bool ok = DateTime.TryParseExact(x, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
+                    return new { Date = date, Valid = ok };
+                })
+                .Where(x => x.Valid)
+                .Select(x => x.Date)
+                .OrderBy(x => x)
+                .ToList();
         }
 
-        private static void ExportDailyProgress(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        private static SnapshotData LoadSnapshot(DateTime date)
         {
-            string file = Path.Combine(PowerBiRoot, "DailyProgress.csv");
-            bool writeHeader = !File.Exists(file);
+            string folder = Path.Combine(SnapshotsRoot, date.ToString("yyyy-MM-dd"));
+            string snapshotFile = Path.Combine(folder, "snapshot.csv");
+            string testsFile = Path.Combine(folder, "tests.csv");
 
-            int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
-            int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
-            int disappeared = comparison.Disappeared.Count;
-            int previous = existing + disappeared;
-            int currentCount = current.Count;
-            int netChange = currentCount - previous;
-
-            using (var writer = new StreamWriter(file, true, new UTF8Encoding(true)))
+            var data = new SnapshotData
             {
-                if (writeHeader)
-                    writer.WriteLine("SnapshotDate,Previous,Current,New,Existing,Disappeared,NetChange");
+                Date = date,
+                Records = File.Exists(snapshotFile) ? ReadSnapshotCsv(snapshotFile) : new List<ClashRecord>(),
+                Tests = new List<string>()
+            };
+
+            if (File.Exists(testsFile))
+            {
+                data.Tests = File.ReadLines(testsFile)
+                    .Skip(1)
+                    .Select(ParseCsvLine)
+                    .Where(x => x.Count > 0 && !string.IsNullOrWhiteSpace(x[0]))
+                    .Select(x => x[0])
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+            else
+            {
+                data.Tests = data.Records.Select(x => x.TestName)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+
+            return data;
+        }
+
+        private static void RebuildDerivedFiles()
+        {
+            Directory.CreateDirectory(PowerBiRoot);
+
+            string dailyFile = Path.Combine(PowerBiRoot, "DailyProgress.csv");
+            string testFile = Path.Combine(PowerBiRoot, "TestPerformance.csv");
+            string currentFile = Path.Combine(PowerBiRoot, "CurrentClashes.csv");
+            string powerBiHistory = Path.Combine(PowerBiRoot, "ClashHistory.csv");
+
+            using (var historyWriter = new StreamWriter(HistoryFile, false, new UTF8Encoding(true)))
+            using (var dailyWriter = new StreamWriter(dailyFile, false, new UTF8Encoding(true)))
+            using (var testWriter = new StreamWriter(testFile, false, new UTF8Encoding(true)))
+            {
+                historyWriter.WriteLine(HistoryHeader());
+                dailyWriter.WriteLine("SnapshotDate,Previous,Current,New,Reopened,Existing,Resolved,NetChange");
+                testWriter.WriteLine("SnapshotDate,TestName,Previous,Current,New,Reopened,Existing,Resolved,NetChange");
+
+                SnapshotData previous = SnapshotData.Empty();
+                var everSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                SnapshotData latest = SnapshotData.Empty();
+                ComparisonResult latestComparison = new ComparisonResult();
+
+                foreach (DateTime date in GetSnapshotDates())
+                {
+                    SnapshotData current = LoadSnapshot(date);
+                    ComparisonResult comparison = CompareSnapshots(previous.Records, current.Records, everSeen);
+
+                    WriteHistoryRows(historyWriter, date, current.Records, comparison);
+                    WriteDailyProgressRow(dailyWriter, date, previous, current, comparison);
+                    WriteTestPerformanceRows(testWriter, date, previous, current, comparison);
+
+                    foreach (ClashRecord record in current.Records)
+                        everSeen.Add(record.ClashGuid);
+
+                    previous = current;
+                    latest = current;
+                    latestComparison = comparison;
+                }
+
+                WriteClashCsv(currentFile, latest.Records, latestComparison.StateByGuid);
+            }
+
+            File.Copy(HistoryFile, powerBiHistory, true);
+        }
+
+        private static void WriteHistoryRows(
+            StreamWriter writer,
+            DateTime date,
+            List<ClashRecord> current,
+            ComparisonResult comparison)
+        {
+            foreach (ClashRecord r in current)
+            {
+                string state;
+                if (!comparison.StateByGuid.TryGetValue(r.ClashGuid, out state))
+                    state = "Existing";
+                writer.WriteLine(ToHistoryCsvLine(r, state));
+            }
+
+            foreach (ClashRecord r in comparison.Resolved)
+            {
+                ClashRecord resolved = r.CloneForDate(date);
+                writer.WriteLine(ToHistoryCsvLine(resolved, "Resolved"));
+            }
+        }
+
+        private static void WriteDailyProgressRow(
+            StreamWriter writer,
+            DateTime date,
+            SnapshotData previous,
+            SnapshotData current,
+            ComparisonResult comparison)
+        {
+            int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
+            int reopened = comparison.StateByGuid.Count(x => x.Value == "Reopened");
+            int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
+            int resolved = comparison.Resolved.Count;
+
+            writer.WriteLine(string.Join(",", new[]
+            {
+                Csv(date.ToString("yyyy-MM-dd")),
+                previous.Records.Count.ToString(CultureInfo.InvariantCulture),
+                current.Records.Count.ToString(CultureInfo.InvariantCulture),
+                newCount.ToString(CultureInfo.InvariantCulture),
+                reopened.ToString(CultureInfo.InvariantCulture),
+                existing.ToString(CultureInfo.InvariantCulture),
+                resolved.ToString(CultureInfo.InvariantCulture),
+                (current.Records.Count - previous.Records.Count).ToString(CultureInfo.InvariantCulture)
+            }));
+        }
+
+        private static void WriteTestPerformanceRows(
+            StreamWriter writer,
+            DateTime date,
+            SnapshotData previous,
+            SnapshotData current,
+            ComparisonResult comparison)
+        {
+            var allTests = new HashSet<string>(previous.Tests, StringComparer.OrdinalIgnoreCase);
+            allTests.UnionWith(current.Tests);
+
+            var prevByTest = previous.Records.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+            var currByTest = current.Records.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+            var resolvedByTest = comparison.Resolved.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+
+            foreach (string test in allTests.OrderBy(x => x))
+            {
+                List<ClashRecord> currentRows;
+                if (!currByTest.TryGetValue(test, out currentRows))
+                    currentRows = new List<ClashRecord>();
+
+                int previousCount = prevByTest.ContainsKey(test) ? prevByTest[test] : 0;
+                int currentCount = currentRows.Count;
+                int newCount = currentRows.Count(x => StateOf(comparison, x.ClashGuid) == "New");
+                int reopened = currentRows.Count(x => StateOf(comparison, x.ClashGuid) == "Reopened");
+                int existing = currentRows.Count(x => StateOf(comparison, x.ClashGuid) == "Existing");
+                int resolved = resolvedByTest.ContainsKey(test) ? resolvedByTest[test] : 0;
 
                 writer.WriteLine(string.Join(",", new[]
                 {
                     Csv(date.ToString("yyyy-MM-dd")),
-                    previous.ToString(CultureInfo.InvariantCulture),
+                    Csv(test),
+                    previousCount.ToString(CultureInfo.InvariantCulture),
                     currentCount.ToString(CultureInfo.InvariantCulture),
                     newCount.ToString(CultureInfo.InvariantCulture),
+                    reopened.ToString(CultureInfo.InvariantCulture),
                     existing.ToString(CultureInfo.InvariantCulture),
-                    disappeared.ToString(CultureInfo.InvariantCulture),
-                    netChange.ToString(CultureInfo.InvariantCulture)
+                    resolved.ToString(CultureInfo.InvariantCulture),
+                    (currentCount - previousCount).ToString(CultureInfo.InvariantCulture)
                 }));
             }
         }
 
-        private static void ExportTestPerformance(DateTime date, List<ClashRecord> current, ComparisonResult comparison)
+        private static string StateOf(ComparisonResult comparison, string guid)
         {
-            string file = Path.Combine(PowerBiRoot, "TestPerformance.csv");
-            bool writeHeader = !File.Exists(file);
-
-            var currentByTest = current.GroupBy(x => x.TestName).ToDictionary(g => g.Key, g => g.ToList());
-            var disappearedByTest = comparison.Disappeared.GroupBy(x => x.TestName).ToDictionary(g => g.Key, g => g.Count());
-
-            using (var writer = new StreamWriter(file, true, new UTF8Encoding(true)))
-            {
-                if (writeHeader)
-                    writer.WriteLine("SnapshotDate,TestName,Current,New,Existing,Disappeared,Previous,NetChange");
-
-                foreach (var kvp in currentByTest.OrderBy(x => x.Key))
-                {
-                    int currentCount = kvp.Value.Count;
-                    int newCount = kvp.Value.Count(x => comparison.StateByGuid.ContainsKey(x.ClashGuid) && comparison.StateByGuid[x.ClashGuid] == "New");
-                    int existing = currentCount - newCount;
-                    int disappeared = disappearedByTest.ContainsKey(kvp.Key) ? disappearedByTest[kvp.Key] : 0;
-                    int previous = existing + disappeared;
-                    int net = currentCount - previous;
-
-                    writer.WriteLine(string.Join(",", new[]
-                    {
-                        Csv(date.ToString("yyyy-MM-dd")),
-                        Csv(kvp.Key),
-                        currentCount.ToString(CultureInfo.InvariantCulture),
-                        newCount.ToString(CultureInfo.InvariantCulture),
-                        existing.ToString(CultureInfo.InvariantCulture),
-                        disappeared.ToString(CultureInfo.InvariantCulture),
-                        previous.ToString(CultureInfo.InvariantCulture),
-                        net.ToString(CultureInfo.InvariantCulture)
-                    }));
-                }
-            }
+            string state;
+            return comparison.StateByGuid.TryGetValue(guid, out state) ? state : string.Empty;
         }
 
         private static void WriteClashCsv(string file, List<ClashRecord> records, Dictionary<string, string> states)
         {
             using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
             {
-                writer.WriteLine("SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments");
+                writer.WriteLine(HistoryHeader());
 
                 foreach (ClashRecord r in records)
                 {
@@ -430,6 +549,11 @@ namespace HUMAIN.CoordinationTracker
                     writer.WriteLine(ToHistoryCsvLine(r, state));
                 }
             }
+        }
+
+        private static string HistoryHeader()
+        {
+            return "SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments";
         }
 
         private static List<ClashRecord> ReadSnapshotCsv(string file)
@@ -505,11 +629,16 @@ namespace HUMAIN.CoordinationTracker
             });
         }
 
-        private static void PrintSummary(DateTime date, List<ClashRecord> current, List<ClashRecord> previous, ComparisonResult comparison)
+        private static void PrintSummary(
+            DateTime date,
+            SnapshotData current,
+            SnapshotData previous,
+            ComparisonResult comparison)
         {
             int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
+            int reopened = comparison.StateByGuid.Count(x => x.Value == "Reopened");
             int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
-            int disappeared = comparison.Disappeared.Count;
+            int resolved = comparison.Resolved.Count;
 
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -517,13 +646,14 @@ namespace HUMAIN.CoordinationTracker
             Console.WriteLine("================");
             Console.ResetColor();
             Console.WriteLine("Date        : " + date.ToString("yyyy-MM-dd"));
-            Console.WriteLine("Clash Tests : " + current.Select(x => x.TestName).Distinct(StringComparer.OrdinalIgnoreCase).Count());
-            Console.WriteLine("Previous    : " + previous.Count);
-            Console.WriteLine("Current     : " + current.Count);
+            Console.WriteLine("Clash Tests : " + current.Tests.Count);
+            Console.WriteLine("Previous    : " + previous.Records.Count);
+            Console.WriteLine("Current     : " + current.Records.Count);
             Console.WriteLine("New         : " + newCount);
+            Console.WriteLine("Reopened    : " + reopened);
             Console.WriteLine("Existing    : " + existing);
-            Console.WriteLine("Disappeared : " + disappeared);
-            Console.WriteLine("Net Change  : " + (current.Count - previous.Count));
+            Console.WriteLine("Resolved    : " + resolved);
+            Console.WriteLine("Net Change  : " + (current.Records.Count - previous.Records.Count));
         }
 
         private static string Attr(XElement element, string name)
@@ -632,15 +762,31 @@ namespace HUMAIN.CoordinationTracker
             Console.ReadKey();
         }
 
+        private class SnapshotData
+        {
+            public DateTime Date { get; set; }
+            public List<ClashRecord> Records { get; set; }
+            public List<string> Tests { get; set; }
+
+            public static SnapshotData Empty()
+            {
+                return new SnapshotData
+                {
+                    Records = new List<ClashRecord>(),
+                    Tests = new List<string>()
+                };
+            }
+        }
+
         private class ComparisonResult
         {
             public Dictionary<string, string> StateByGuid { get; private set; }
-            public List<ClashRecord> Disappeared { get; private set; }
+            public List<ClashRecord> Resolved { get; private set; }
 
             public ComparisonResult()
             {
                 StateByGuid = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                Disappeared = new List<ClashRecord>();
+                Resolved = new List<ClashRecord>();
             }
         }
 
