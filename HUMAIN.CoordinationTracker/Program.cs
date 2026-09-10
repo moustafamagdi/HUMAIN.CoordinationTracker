@@ -32,8 +32,17 @@ namespace HUMAIN.CoordinationTracker
                 Console.WriteLine();
 
                 string inputFolder = AskForInputFolder();
-                DateTime snapshotDate = AskForSnapshotDate();
-                SnapshotData imported = ImportSnapshot(inputFolder, snapshotDate);
+                DateTime requestedDate = AskForSnapshotDate();
+                SnapshotChoice choice = ResolveSnapshotChoice(requestedDate);
+                if (choice.Cancelled)
+                {
+                    Console.WriteLine("Import cancelled.");
+                    Pause();
+                    return;
+                }
+
+                DateTime snapshotDateTime = choice.Timestamp;
+                SnapshotData imported = ImportSnapshot(inputFolder, snapshotDateTime);
 
                 if (imported.Records.Count == 0 && imported.Tests.Count == 0)
                 {
@@ -44,13 +53,13 @@ namespace HUMAIN.CoordinationTracker
                     return;
                 }
 
-                SnapshotData previous = LoadPreviousSnapshot(snapshotDate);
-                HashSet<string> everSeenBefore = LoadEverSeenBefore(snapshotDate);
+                SnapshotData previous = LoadPreviousSnapshot(snapshotDateTime, choice.FolderPath);
+                HashSet<string> everSeenBefore = LoadEverSeenBefore(snapshotDateTime, choice.FolderPath);
                 ComparisonResult comparison = CompareSnapshots(previous.Records, imported.Records, everSeenBefore);
 
-                SaveSnapshot(snapshotDate, imported);
+                SaveSnapshot(choice, imported);
                 DashboardSummary dashboard = RebuildDerivedFiles();
-                PrintSummary(snapshotDate, imported, previous, comparison, dashboard);
+                PrintSummary(snapshotDateTime, imported, previous, comparison, dashboard);
 
                 Console.WriteLine();
                 Console.WriteLine("Power BI ready files:");
@@ -111,12 +120,89 @@ namespace HUMAIN.CoordinationTracker
                     DateTimeStyles.None, out date)) return date.Date;
 
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Invalid date. Example: 2026-09-09");
+                Console.WriteLine("Invalid date. Example: 2026-09-10");
                 Console.ResetColor();
             }
         }
 
-        private static SnapshotData ImportSnapshot(string folder, DateTime snapshotDate)
+        private static SnapshotChoice ResolveSnapshotChoice(DateTime requestedDate)
+        {
+            List<SnapshotRef> sameDay = GetSnapshotRefs()
+                .Where(x => x.Timestamp.Date == requestedDate.Date)
+                .OrderBy(x => x.Timestamp)
+                .ToList();
+
+            if (sameDay.Count == 0)
+            {
+                DateTime timestamp = BuildNewSnapshotTimestamp(requestedDate);
+                return new SnapshotChoice
+                {
+                    Timestamp = timestamp,
+                    FolderPath = Path.Combine(SnapshotsRoot, SnapshotFolderName(timestamp)),
+                    IsOverwrite = false
+                };
+            }
+
+            SnapshotRef latest = sameDay.Last();
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Snapshot(s) already exist for " + requestedDate.ToString("yyyy-MM-dd") + ".");
+            foreach (SnapshotRef item in sameDay)
+                Console.WriteLine("  - " + item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.ResetColor();
+            Console.WriteLine();
+            Console.WriteLine("Choose what to do:");
+            Console.WriteLine("  O = Overwrite latest snapshot (" + latest.Timestamp.ToString("HH:mm:ss") + ")");
+            Console.WriteLine("  N = Save as a NEW snapshot/version for the same day");
+            Console.WriteLine("  C = Cancel");
+
+            while (true)
+            {
+                Console.Write("Your choice [O/N/C]: ");
+                string answer = (Console.ReadLine() ?? string.Empty).Trim().ToUpperInvariant();
+
+                if (answer == "O")
+                {
+                    return new SnapshotChoice
+                    {
+                        Timestamp = latest.Timestamp,
+                        FolderPath = latest.FolderPath,
+                        IsOverwrite = true
+                    };
+                }
+
+                if (answer == "N")
+                {
+                    DateTime timestamp = BuildNewSnapshotTimestamp(requestedDate);
+                    while (GetSnapshotRefs().Any(x => x.Timestamp == timestamp))
+                        timestamp = timestamp.AddSeconds(1);
+
+                    return new SnapshotChoice
+                    {
+                        Timestamp = timestamp,
+                        FolderPath = Path.Combine(SnapshotsRoot, SnapshotFolderName(timestamp)),
+                        IsOverwrite = false
+                    };
+                }
+
+                if (answer == "C") return new SnapshotChoice { Cancelled = true };
+                Console.WriteLine("Please enter O, N, or C.");
+            }
+        }
+
+        private static DateTime BuildNewSnapshotTimestamp(DateTime requestedDate)
+        {
+            DateTime now = DateTime.Now;
+            return new DateTime(requestedDate.Year, requestedDate.Month, requestedDate.Day,
+                now.Hour, now.Minute, now.Second);
+        }
+
+        private static string SnapshotFolderName(DateTime timestamp)
+        {
+            return timestamp.ToString("yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture);
+        }
+
+        private static SnapshotData ImportSnapshot(string folder, DateTime snapshotDateTime)
         {
             string[] files = Directory.GetFiles(folder, "*.xml", SearchOption.AllDirectories);
             Console.WriteLine();
@@ -143,7 +229,7 @@ namespace HUMAIN.CoordinationTracker
                         TestMetadata metadata = ParseTestMetadata(testName);
                         var record = new ClashRecord
                         {
-                            SnapshotDate = snapshotDate,
+                            SnapshotDate = snapshotDateTime,
                             TestName = testName,
                             ClashGuid = guid,
                             ClashName = Attr(clash, "name"),
@@ -193,7 +279,7 @@ namespace HUMAIN.CoordinationTracker
 
             return new SnapshotData
             {
-                Date = snapshotDate,
+                Date = snapshotDateTime,
                 Records = results.GroupBy(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList(),
                 Tests = tests.OrderBy(x => x).ToList()
             };
@@ -292,18 +378,31 @@ namespace HUMAIN.CoordinationTracker
             return string.Empty;
         }
 
-        private static SnapshotData LoadPreviousSnapshot(DateTime currentDate)
+        private static SnapshotData LoadPreviousSnapshot(DateTime currentTimestamp, string currentFolder)
         {
-            var dates = GetSnapshotDates().Where(x => x < currentDate).OrderByDescending(x => x).ToList();
-            return dates.Count == 0 ? SnapshotData.Empty() : LoadSnapshot(dates[0]);
+            SnapshotRef previous = GetSnapshotRefs()
+                .Where(x => x.Timestamp < currentTimestamp && !SamePath(x.FolderPath, currentFolder))
+                .OrderByDescending(x => x.Timestamp)
+                .FirstOrDefault();
+            return previous == null ? SnapshotData.Empty() : LoadSnapshot(previous);
         }
 
-        private static HashSet<string> LoadEverSeenBefore(DateTime currentDate)
+        private static HashSet<string> LoadEverSeenBefore(DateTime currentTimestamp, string currentFolder)
         {
             var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (DateTime date in GetSnapshotDates().Where(x => x < currentDate).OrderBy(x => x))
-                foreach (ClashRecord record in LoadSnapshot(date).Records) set.Add(record.ClashGuid);
+            foreach (SnapshotRef snapshot in GetSnapshotRefs()
+                .Where(x => x.Timestamp < currentTimestamp && !SamePath(x.FolderPath, currentFolder))
+                .OrderBy(x => x.Timestamp))
+            {
+                foreach (ClashRecord record in LoadSnapshot(snapshot).Records) set.Add(record.ClashGuid);
+            }
             return set;
+        }
+
+        private static bool SamePath(string a, string b)
+        {
+            return string.Equals(Path.GetFullPath(a ?? string.Empty).TrimEnd('\\'),
+                Path.GetFullPath(b ?? string.Empty).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
         }
 
         private static ComparisonResult CompareSnapshots(List<ClashRecord> previous, List<ClashRecord> current, HashSet<string> everSeenBefore)
@@ -324,49 +423,86 @@ namespace HUMAIN.CoordinationTracker
             return result;
         }
 
-        private static void SaveSnapshot(DateTime date, SnapshotData snapshot)
+        private static void SaveSnapshot(SnapshotChoice choice, SnapshotData snapshot)
         {
-            string folder = Path.Combine(SnapshotsRoot, date.ToString("yyyy-MM-dd"));
-            bool replacing = Directory.Exists(folder);
-            Directory.CreateDirectory(folder);
-            WriteClashCsv(Path.Combine(folder, "snapshot.csv"), snapshot.Records, null);
+            Directory.CreateDirectory(choice.FolderPath);
+            WriteClashCsv(Path.Combine(choice.FolderPath, "snapshot.csv"), snapshot.Records, null);
 
-            using (var writer = new StreamWriter(Path.Combine(folder, "tests.csv"), false, new UTF8Encoding(true)))
+            using (var writer = new StreamWriter(Path.Combine(choice.FolderPath, "tests.csv"), false, new UTF8Encoding(true)))
             {
                 writer.WriteLine("TestName");
                 foreach (string test in snapshot.Tests.OrderBy(x => x)) writer.WriteLine(Csv(test));
             }
 
-            if (replacing)
+            using (var writer = new StreamWriter(Path.Combine(choice.FolderPath, "metadata.csv"), false, new UTF8Encoding(true)))
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Existing snapshot for " + date.ToString("yyyy-MM-dd") + " was replaced.");
-                Console.ResetColor();
+                writer.WriteLine("SnapshotDateTime");
+                writer.WriteLine(Csv(choice.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")));
             }
+
+            Console.ForegroundColor = choice.IsOverwrite ? ConsoleColor.Yellow : ConsoleColor.Green;
+            Console.WriteLine(choice.IsOverwrite
+                ? "Existing snapshot was overwritten: " + choice.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                : "New snapshot saved: " + choice.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
+            Console.ResetColor();
         }
 
-        private static List<DateTime> GetSnapshotDates()
+        private static List<SnapshotRef> GetSnapshotRefs()
         {
-            if (!Directory.Exists(SnapshotsRoot)) return new List<DateTime>();
-            return Directory.GetDirectories(SnapshotsRoot).Select(Path.GetFileName).Select(x =>
+            var result = new List<SnapshotRef>();
+            if (!Directory.Exists(SnapshotsRoot)) return result;
+
+            foreach (string folder in Directory.GetDirectories(SnapshotsRoot))
             {
-                DateTime date;
-                bool ok = DateTime.TryParseExact(x, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
-                return new { Date = date, Valid = ok };
-            }).Where(x => x.Valid).Select(x => x.Date).OrderBy(x => x).ToList();
+                string name = Path.GetFileName(folder);
+                DateTime timestamp;
+                bool valid = DateTime.TryParseExact(name, "yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out timestamp);
+
+                if (!valid)
+                    valid = DateTime.TryParseExact(name, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out timestamp);
+
+                string metadata = Path.Combine(folder, "metadata.csv");
+                if (File.Exists(metadata))
+                {
+                    try
+                    {
+                        string line = File.ReadLines(metadata).Skip(1).FirstOrDefault();
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            List<string> v = ParseCsvLine(line);
+                            DateTime fromMetadata;
+                            if (v.Count > 0 && DateTime.TryParse(v[0], CultureInfo.InvariantCulture,
+                                DateTimeStyles.AllowWhiteSpaces, out fromMetadata))
+                            {
+                                timestamp = fromMetadata;
+                                valid = true;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                if (valid)
+                    result.Add(new SnapshotRef { Timestamp = timestamp, FolderPath = folder });
+            }
+
+            return result.OrderBy(x => x.Timestamp).ThenBy(x => x.FolderPath).ToList();
         }
 
-        private static SnapshotData LoadSnapshot(DateTime date)
+        private static SnapshotData LoadSnapshot(SnapshotRef snapshot)
         {
-            string folder = Path.Combine(SnapshotsRoot, date.ToString("yyyy-MM-dd"));
-            string snapshotFile = Path.Combine(folder, "snapshot.csv");
-            string testsFile = Path.Combine(folder, "tests.csv");
+            string snapshotFile = Path.Combine(snapshot.FolderPath, "snapshot.csv");
+            string testsFile = Path.Combine(snapshot.FolderPath, "tests.csv");
             var data = new SnapshotData
             {
-                Date = date,
+                Date = snapshot.Timestamp,
                 Records = File.Exists(snapshotFile) ? ReadSnapshotCsv(snapshotFile) : new List<ClashRecord>(),
                 Tests = new List<string>()
             };
+
+            foreach (ClashRecord record in data.Records) record.SnapshotDate = snapshot.Timestamp;
 
             if (File.Exists(testsFile))
             {
@@ -392,7 +528,7 @@ namespace HUMAIN.CoordinationTracker
             string kpiFile = Path.Combine(PowerBiRoot, "DashboardKPI.csv");
             string powerBiHistory = Path.Combine(PowerBiRoot, "ClashHistory.csv");
 
-            var dates = GetSnapshotDates();
+            List<SnapshotRef> snapshots = GetSnapshotRefs();
             var dailyRows = new List<DailyMetric>();
             var lifecycle = new Dictionary<string, LifecycleRecord>(StringComparer.OrdinalIgnoreCase);
             SnapshotData previous = SnapshotData.Empty();
@@ -404,16 +540,16 @@ namespace HUMAIN.CoordinationTracker
             using (var testWriter = new StreamWriter(testFile, false, new UTF8Encoding(true)))
             {
                 historyWriter.WriteLine(HistoryHeader());
-                testWriter.WriteLine("SnapshotDate,TestName,Severity,DisciplineA,DisciplineB,DisciplinePair,Previous,Current,New,Reopened,Existing,Resolved,NetChange,ResolutionRatePct");
+                testWriter.WriteLine("SnapshotDateTime,SnapshotDate,TestName,Severity,DisciplineA,DisciplineB,DisciplinePair,Previous,Current,New,Reopened,Existing,Resolved,NetChange,ResolutionRatePct");
 
-                foreach (DateTime date in dates)
+                foreach (SnapshotRef snapshotRef in snapshots)
                 {
-                    SnapshotData current = LoadSnapshot(date);
+                    SnapshotData current = LoadSnapshot(snapshotRef);
                     ComparisonResult comparison = CompareSnapshots(previous.Records, current.Records, everSeen);
-                    UpdateLifecycle(lifecycle, date, current, comparison);
-                    WriteHistoryRows(historyWriter, date, current.Records, comparison, lifecycle);
-                    dailyRows.Add(BuildDailyMetric(date, previous, current, comparison));
-                    WriteTestPerformanceRows(testWriter, date, previous, current, comparison);
+                    UpdateLifecycle(lifecycle, current.Date, current, comparison);
+                    WriteHistoryRows(historyWriter, current.Date, current.Records, comparison, lifecycle);
+                    dailyRows.Add(BuildDailyMetric(current.Date, previous, current, comparison));
+                    WriteTestPerformanceRows(testWriter, current.Date, previous, current, comparison);
 
                     foreach (ClashRecord record in current.Records) everSeen.Add(record.ClashGuid);
                     previous = current; latest = current; latestComparison = comparison;
@@ -503,11 +639,11 @@ namespace HUMAIN.CoordinationTracker
         {
             for (int i = 0; i < rows.Count; i++)
             {
-                DateTime from = rows[i].Date.AddDays(-6);
+                DateTime from = rows[i].Date.AddDays(-7);
                 List<DailyMetric> window = rows.Where(x => x.Date >= from && x.Date <= rows[i].Date).ToList();
-                int spanDays = Math.Max(1, (rows[i].Date - window.Min(x => x.Date)).Days + 1);
-                double resolvedPerDay = window.Sum(x => x.Resolved) / (double)spanDays;
-                double newPerDay = window.Sum(x => x.Inflow) / (double)spanDays;
+                double elapsedDays = Math.Max(1.0, (rows[i].Date - window.Min(x => x.Date)).TotalDays);
+                double resolvedPerDay = window.Sum(x => x.Resolved) / elapsedDays;
+                double newPerDay = window.Sum(x => x.Inflow) / elapsedDays;
                 double netBurnPerDay = resolvedPerDay - newPerDay;
 
                 rows[i].Rolling7ResolvedPerDay = resolvedPerDay;
@@ -524,16 +660,17 @@ namespace HUMAIN.CoordinationTracker
         {
             using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
             {
-                writer.WriteLine("SnapshotDate,Previous,Current,New,Reopened,Existing,Resolved,Inflow,NetChange,NetBurn,ResolutionRatePct,Rolling7ResolvedPerDay,Rolling7NewPerDay,Rolling7NetBurnPerDay,ForecastDaysToZero,ForecastFinishDate");
+                writer.WriteLine("SnapshotDateTime,SnapshotDate,Previous,Current,New,Reopened,Existing,Resolved,Inflow,NetChange,NetBurn,ResolutionRatePct,Rolling7ResolvedPerDay,Rolling7NewPerDay,Rolling7NetBurnPerDay,ForecastDaysToZero,ForecastFinishDate");
                 foreach (DailyMetric r in rows)
                 {
                     writer.WriteLine(string.Join(",", new[]
                     {
-                        Csv(r.Date.ToString("yyyy-MM-dd")), r.Previous.ToString(), r.Current.ToString(), r.New.ToString(),
-                        r.Reopened.ToString(), r.Existing.ToString(), r.Resolved.ToString(), r.Inflow.ToString(),
-                        r.NetChange.ToString(), r.NetBurn.ToString(), Number(r.ResolutionRatePct),
-                        Number(r.Rolling7ResolvedPerDay), Number(r.Rolling7NewPerDay), Number(r.Rolling7NetBurnPerDay),
-                        Number(r.ForecastDaysToZero), Csv(r.ForecastFinishDate.HasValue ? r.ForecastFinishDate.Value.ToString("yyyy-MM-dd") : string.Empty)
+                        Csv(r.Date.ToString("yyyy-MM-dd HH:mm:ss")), Csv(r.Date.ToString("yyyy-MM-dd")),
+                        r.Previous.ToString(), r.Current.ToString(), r.New.ToString(), r.Reopened.ToString(),
+                        r.Existing.ToString(), r.Resolved.ToString(), r.Inflow.ToString(), r.NetChange.ToString(),
+                        r.NetBurn.ToString(), Number(r.ResolutionRatePct), Number(r.Rolling7ResolvedPerDay),
+                        Number(r.Rolling7NewPerDay), Number(r.Rolling7NetBurnPerDay), Number(r.ForecastDaysToZero),
+                        Csv(r.ForecastFinishDate.HasValue ? r.ForecastFinishDate.Value.ToString("yyyy-MM-dd") : string.Empty)
                     }));
                 }
             }
@@ -546,12 +683,12 @@ namespace HUMAIN.CoordinationTracker
                 writer.WriteLine("ClashGuid,TestName,Severity,DisciplineA,DisciplineB,DisciplinePair,FirstSeen,LastSeen,LastResolved,IsOpen,AgeDays,AgeBucket,ReopenCount,ResolutionCount,LastNavisworksStatus,LastDistance");
                 foreach (LifecycleRecord r in lifecycle.OrderBy(x => x.TestName).ThenBy(x => x.ClashGuid))
                 {
-                    int age = Math.Max(0, (latestDate - r.FirstSeen).Days);
+                    int age = Math.Max(0, (int)Math.Floor((latestDate - r.FirstSeen).TotalDays));
                     writer.WriteLine(string.Join(",", new[]
                     {
                         Csv(r.ClashGuid), Csv(r.TestName), Csv(r.Severity), Csv(r.DisciplineA), Csv(r.DisciplineB), Csv(r.DisciplinePair),
-                        Csv(r.FirstSeen.ToString("yyyy-MM-dd")), Csv(r.LastSeen.ToString("yyyy-MM-dd")),
-                        Csv(r.LastResolved.HasValue ? r.LastResolved.Value.ToString("yyyy-MM-dd") : string.Empty),
+                        Csv(r.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss")), Csv(r.LastSeen.ToString("yyyy-MM-dd HH:mm:ss")),
+                        Csv(r.LastResolved.HasValue ? r.LastResolved.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty),
                         Csv(r.IsOpen ? "Open" : "Resolved"), age.ToString(), Csv(AgeBucket(age)), r.ReopenCount.ToString(),
                         r.ResolutionCount.ToString(), Csv(r.LastStatus), Number(r.LastDistance)
                     }));
@@ -567,7 +704,7 @@ namespace HUMAIN.CoordinationTracker
                 foreach (ClashRecord r in latest.Records)
                 {
                     LifecycleRecord life = lifecycle[r.ClashGuid];
-                    int age = Math.Max(0, (latest.Date - life.FirstSeen).Days);
+                    int age = Math.Max(0, (int)Math.Floor((latest.Date - life.FirstSeen).TotalDays));
                     string state = StateOf(comparison, r.ClashGuid);
                     writer.WriteLine(ToCurrentCsvLine(r, state, life, age));
                 }
@@ -578,15 +715,16 @@ namespace HUMAIN.CoordinationTracker
         {
             DailyMetric latestDay = dailyRows.LastOrDefault() ?? new DailyMetric();
             List<LifecycleRecord> open = lifecycle.Where(x => x.IsOpen).ToList();
-            double avgAge = open.Count > 0 ? open.Average(x => Math.Max(0, (latest.Date - x.FirstSeen).Days)) : 0;
-            int stale14 = open.Count(x => (latest.Date - x.FirstSeen).Days >= 14);
+            double avgAge = open.Count > 0 ? open.Average(x => Math.Max(0, (latest.Date - x.FirstSeen).TotalDays)) : 0;
+            int stale14 = open.Count(x => (latest.Date - x.FirstSeen).TotalDays >= 14);
             int critical = open.Count(x => string.Equals(x.Severity, "Critical", StringComparison.OrdinalIgnoreCase));
 
             using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
             {
-                writer.WriteLine("SnapshotDate,OpenClashes,New,Reopened,Resolved,NetChange,NetBurn,Rolling7ResolvedPerDay,Rolling7NewPerDay,Rolling7NetBurnPerDay,ForecastDaysToZero,ForecastFinishDate,AverageOpenAgeDays,Stale14Plus,CriticalOpen,ClashTests");
+                writer.WriteLine("SnapshotDateTime,SnapshotDate,OpenClashes,New,Reopened,Resolved,NetChange,NetBurn,Rolling7ResolvedPerDay,Rolling7NewPerDay,Rolling7NetBurnPerDay,ForecastDaysToZero,ForecastFinishDate,AverageOpenAgeDays,Stale14Plus,CriticalOpen,ClashTests");
                 writer.WriteLine(string.Join(",", new[]
                 {
+                    Csv(latest.Date == DateTime.MinValue ? string.Empty : latest.Date.ToString("yyyy-MM-dd HH:mm:ss")),
                     Csv(latest.Date == DateTime.MinValue ? string.Empty : latest.Date.ToString("yyyy-MM-dd")),
                     latestDay.Current.ToString(), latestDay.New.ToString(), latestDay.Reopened.ToString(), latestDay.Resolved.ToString(),
                     latestDay.NetChange.ToString(), latestDay.NetBurn.ToString(), Number(latestDay.Rolling7ResolvedPerDay),
@@ -612,7 +750,7 @@ namespace HUMAIN.CoordinationTracker
                 string state = StateOf(comparison, r.ClashGuid);
                 if (string.IsNullOrWhiteSpace(state)) state = "Existing";
                 LifecycleRecord life = lifecycle[r.ClashGuid];
-                int age = Math.Max(0, (date - life.FirstSeen).Days);
+                int age = Math.Max(0, (int)Math.Floor((date - life.FirstSeen).TotalDays));
                 writer.WriteLine(ToHistoryCsvLine(r, state, life.FirstSeen, age, life.ReopenCount));
             }
 
@@ -622,7 +760,7 @@ namespace HUMAIN.CoordinationTracker
                 DateTime firstSeen = date;
                 int reopenCount = 0;
                 if (lifecycle.TryGetValue(r.ClashGuid, out life)) { firstSeen = life.FirstSeen; reopenCount = life.ReopenCount; }
-                int age = Math.Max(0, (date - firstSeen).Days);
+                int age = Math.Max(0, (int)Math.Floor((date - firstSeen).TotalDays));
                 writer.WriteLine(ToHistoryCsvLine(r.CloneForDate(date), "Resolved", firstSeen, age, reopenCount));
             }
         }
@@ -649,7 +787,8 @@ namespace HUMAIN.CoordinationTracker
 
                 writer.WriteLine(string.Join(",", new[]
                 {
-                    Csv(date.ToString("yyyy-MM-dd")), Csv(test), Csv(meta.Severity), Csv(meta.DisciplineA), Csv(meta.DisciplineB), Csv(meta.DisciplinePair),
+                    Csv(date.ToString("yyyy-MM-dd HH:mm:ss")), Csv(date.ToString("yyyy-MM-dd")),
+                    Csv(test), Csv(meta.Severity), Csv(meta.DisciplineA), Csv(meta.DisciplineB), Csv(meta.DisciplinePair),
                     previousCount.ToString(), currentCount.ToString(), newCount.ToString(), reopened.ToString(), existing.ToString(),
                     resolved.ToString(), (currentCount - previousCount).ToString(), Number(rate)
                 }));
@@ -685,7 +824,7 @@ namespace HUMAIN.CoordinationTracker
 
         private static string SnapshotHeader()
         {
-            return "SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments,Severity,DisciplineA,DisciplineB,DisciplinePair";
+            return "SnapshotDateTime,SnapshotDate,TestName,ClashGuid,TrackerState,NavisworksStatus,Distance,DateFound,GridLocation,X,Y,Z,ItemAElementId,ItemAName,ItemALayer,ItemAPath,ItemBElementId,ItemBName,ItemBLayer,ItemBPath,Description,Comments,Severity,DisciplineA,DisciplineB,DisciplinePair";
         }
 
         private static string HistoryHeader()
@@ -704,19 +843,33 @@ namespace HUMAIN.CoordinationTracker
             foreach (string line in File.ReadLines(file))
             {
                 if (first) { first = false; continue; }
-                List<string> v = ParseCsvLine(line); if (v.Count < 21) continue;
-                string testName = v[1]; TestMetadata meta = ParseTestMetadata(testName);
+                List<string> v = ParseCsvLine(line);
+                if (v.Count < 21) continue;
+
+                bool newFormat = v.Count >= 26;
+                int o = newFormat ? 1 : 0;
+                string testName = v[1 + o];
+                TestMetadata meta = ParseTestMetadata(testName);
+
                 records.Add(new ClashRecord
                 {
-                    SnapshotDate = ParseDate(v[0]) ?? DateTime.MinValue, TestName = testName, ClashGuid = v[2], Status = v[4],
-                    Distance = ParseNullableDouble(v[5]), DateFound = ParseDate(v[6]), GridLocation = v[7],
-                    X = ParseNullableDouble(v[8]), Y = ParseNullableDouble(v[9]), Z = ParseNullableDouble(v[10]),
-                    ItemAElementId = v[11], ItemAName = v[12], ItemALayer = v[13], ItemAPath = v[14],
-                    ItemBElementId = v[15], ItemBName = v[16], ItemBLayer = v[17], ItemBPath = v[18], Description = v[19], Comments = v[20],
-                    Severity = v.Count > 21 && !string.IsNullOrWhiteSpace(v[21]) ? v[21] : meta.Severity,
-                    DisciplineA = v.Count > 22 && !string.IsNullOrWhiteSpace(v[22]) ? v[22] : meta.DisciplineA,
-                    DisciplineB = v.Count > 23 && !string.IsNullOrWhiteSpace(v[23]) ? v[23] : meta.DisciplineB,
-                    DisciplinePair = v.Count > 24 && !string.IsNullOrWhiteSpace(v[24]) ? v[24] : meta.DisciplinePair
+                    SnapshotDate = ParseDate(v[0]) ?? DateTime.MinValue,
+                    TestName = testName,
+                    ClashGuid = v[2 + o],
+                    Status = v[4 + o],
+                    Distance = ParseNullableDouble(v[5 + o]),
+                    DateFound = ParseDate(v[6 + o]),
+                    GridLocation = v[7 + o],
+                    X = ParseNullableDouble(v[8 + o]),
+                    Y = ParseNullableDouble(v[9 + o]),
+                    Z = ParseNullableDouble(v[10 + o]),
+                    ItemAElementId = v[11 + o], ItemAName = v[12 + o], ItemALayer = v[13 + o], ItemAPath = v[14 + o],
+                    ItemBElementId = v[15 + o], ItemBName = v[16 + o], ItemBLayer = v[17 + o], ItemBPath = v[18 + o],
+                    Description = v[19 + o], Comments = v[20 + o],
+                    Severity = v.Count > 21 + o && !string.IsNullOrWhiteSpace(v[21 + o]) ? v[21 + o] : meta.Severity,
+                    DisciplineA = v.Count > 22 + o && !string.IsNullOrWhiteSpace(v[22 + o]) ? v[22 + o] : meta.DisciplineA,
+                    DisciplineB = v.Count > 23 + o && !string.IsNullOrWhiteSpace(v[23 + o]) ? v[23 + o] : meta.DisciplineB,
+                    DisciplinePair = v.Count > 24 + o && !string.IsNullOrWhiteSpace(v[24 + o]) ? v[24 + o] : meta.DisciplinePair
                 });
             }
             return records;
@@ -726,10 +879,12 @@ namespace HUMAIN.CoordinationTracker
         {
             return string.Join(",", new[]
             {
-                Csv(r.SnapshotDate.ToString("yyyy-MM-dd")), Csv(r.TestName), Csv(r.ClashGuid), Csv(trackerState), Csv(r.Status), Number(r.Distance),
-                Csv(r.DateFound.HasValue ? r.DateFound.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty), Csv(r.GridLocation), Number(r.X), Number(r.Y), Number(r.Z),
-                Csv(r.ItemAElementId), Csv(r.ItemAName), Csv(r.ItemALayer), Csv(r.ItemAPath), Csv(r.ItemBElementId), Csv(r.ItemBName), Csv(r.ItemBLayer), Csv(r.ItemBPath),
-                Csv(r.Description), Csv(r.Comments), Csv(r.Severity), Csv(r.DisciplineA), Csv(r.DisciplineB), Csv(r.DisciplinePair)
+                Csv(r.SnapshotDate.ToString("yyyy-MM-dd HH:mm:ss")), Csv(r.SnapshotDate.ToString("yyyy-MM-dd")),
+                Csv(r.TestName), Csv(r.ClashGuid), Csv(trackerState), Csv(r.Status), Number(r.Distance),
+                Csv(r.DateFound.HasValue ? r.DateFound.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty), Csv(r.GridLocation),
+                Number(r.X), Number(r.Y), Number(r.Z), Csv(r.ItemAElementId), Csv(r.ItemAName), Csv(r.ItemALayer), Csv(r.ItemAPath),
+                Csv(r.ItemBElementId), Csv(r.ItemBName), Csv(r.ItemBLayer), Csv(r.ItemBPath), Csv(r.Description), Csv(r.Comments),
+                Csv(r.Severity), Csv(r.DisciplineA), Csv(r.DisciplineB), Csv(r.DisciplinePair)
             });
         }
 
@@ -737,7 +892,7 @@ namespace HUMAIN.CoordinationTracker
         {
             return ToSnapshotCsvLine(r, trackerState) + "," + string.Join(",", new[]
             {
-                Csv(firstSeen.ToString("yyyy-MM-dd")), age.ToString(), Csv(AgeBucket(age)), reopenCount.ToString()
+                Csv(firstSeen.ToString("yyyy-MM-dd HH:mm:ss")), age.ToString(), Csv(AgeBucket(age)), reopenCount.ToString()
             });
         }
 
@@ -745,7 +900,8 @@ namespace HUMAIN.CoordinationTracker
         {
             return ToSnapshotCsvLine(r, trackerState) + "," + string.Join(",", new[]
             {
-                Csv(life.FirstSeen.ToString("yyyy-MM-dd")), age.ToString(), Csv(AgeBucket(age)), life.ReopenCount.ToString(), Csv(age >= 14 ? "Yes" : "No")
+                Csv(life.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss")), age.ToString(), Csv(AgeBucket(age)),
+                life.ReopenCount.ToString(), Csv(age >= 14 ? "Yes" : "No")
             });
         }
 
@@ -759,7 +915,7 @@ namespace HUMAIN.CoordinationTracker
 
             Console.WriteLine(); Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("SNAPSHOT SUMMARY"); Console.WriteLine("================"); Console.ResetColor();
-            Console.WriteLine("Date        : " + date.ToString("yyyy-MM-dd"));
+            Console.WriteLine("Date/Time   : " + date.ToString("yyyy-MM-dd HH:mm:ss"));
             Console.WriteLine("Clash Tests : " + current.Tests.Count);
             Console.WriteLine("Previous    : " + previous.Records.Count);
             Console.WriteLine("Current     : " + current.Records.Count);
@@ -841,12 +997,26 @@ namespace HUMAIN.CoordinationTracker
 
         private static void Pause() { Console.WriteLine(); Console.WriteLine("Press any key to exit..."); Console.ReadKey(); }
 
+        private class SnapshotRef
+        {
+            public DateTime Timestamp { get; set; }
+            public string FolderPath { get; set; }
+        }
+
+        private class SnapshotChoice
+        {
+            public DateTime Timestamp { get; set; }
+            public string FolderPath { get; set; }
+            public bool IsOverwrite { get; set; }
+            public bool Cancelled { get; set; }
+        }
+
         private class SnapshotData
         {
             public DateTime Date { get; set; }
             public List<ClashRecord> Records { get; set; }
             public List<string> Tests { get; set; }
-            public static SnapshotData Empty() { return new SnapshotData { Records = new List<ClashRecord>(), Tests = new List<string>() }; }
+            public static SnapshotData Empty() { return new SnapshotData { Date = DateTime.MinValue, Records = new List<ClashRecord>(), Tests = new List<string>() }; }
         }
 
         private class ComparisonResult
