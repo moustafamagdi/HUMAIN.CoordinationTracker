@@ -410,10 +410,12 @@ namespace HUMAIN.CoordinationTracker
             var previousMap = previous.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
             var currentMap = current.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
             var result = new ComparisonResult();
+            bool isBaseline = previous.Count == 0 && everSeenBefore.Count == 0;
 
             foreach (ClashRecord c in current)
             {
-                if (previousMap.ContainsKey(c.ClashGuid)) result.StateByGuid[c.ClashGuid] = "Existing";
+                if (isBaseline) result.StateByGuid[c.ClashGuid] = "Baseline";
+                else if (previousMap.ContainsKey(c.ClashGuid)) result.StateByGuid[c.ClashGuid] = "Existing";
                 else if (everSeenBefore.Contains(c.ClashGuid)) result.StateByGuid[c.ClashGuid] = "Reopened";
                 else result.StateByGuid[c.ClashGuid] = "New";
             }
@@ -611,6 +613,7 @@ namespace HUMAIN.CoordinationTracker
 
         private static DailyMetric BuildDailyMetric(DateTime date, SnapshotData previous, SnapshotData current, ComparisonResult comparison)
         {
+            bool isBaseline = comparison.StateByGuid.Count > 0 && comparison.StateByGuid.All(x => x.Value == "Baseline");
             int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
             int reopened = comparison.StateByGuid.Count(x => x.Value == "Reopened");
             int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
@@ -618,6 +621,7 @@ namespace HUMAIN.CoordinationTracker
             int inflow = newCount + reopened;
             int netBurn = resolved - inflow;
             double resolutionRate = previous.Records.Count > 0 ? (resolved * 100.0 / previous.Records.Count) : 0;
+            double intervalDays = previous.Date != DateTime.MinValue ? Math.Max(0, (date - previous.Date).TotalDays) : 0;
 
             return new DailyMetric
             {
@@ -628,10 +632,12 @@ namespace HUMAIN.CoordinationTracker
                 Reopened = reopened,
                 Existing = existing,
                 Resolved = resolved,
-                NetChange = current.Records.Count - previous.Records.Count,
-                Inflow = inflow,
-                NetBurn = netBurn,
-                ResolutionRatePct = resolutionRate
+                NetChange = isBaseline ? 0 : current.Records.Count - previous.Records.Count,
+                Inflow = isBaseline ? 0 : inflow,
+                NetBurn = isBaseline ? 0 : netBurn,
+                ResolutionRatePct = isBaseline ? 0 : resolutionRate,
+                IsBaseline = isBaseline,
+                IntervalDays = isBaseline ? 0 : intervalDays
             };
         }
 
@@ -640,8 +646,21 @@ namespace HUMAIN.CoordinationTracker
             for (int i = 0; i < rows.Count; i++)
             {
                 DateTime from = rows[i].Date.AddDays(-7);
-                List<DailyMetric> window = rows.Where(x => x.Date >= from && x.Date <= rows[i].Date).ToList();
-                double elapsedDays = Math.Max(1.0, (rows[i].Date - window.Min(x => x.Date)).TotalDays);
+                List<DailyMetric> window = rows
+                    .Where(x => x.Date >= from && x.Date <= rows[i].Date && !x.IsBaseline)
+                    .ToList();
+
+                double elapsedDays = window.Sum(x => x.IntervalDays);
+                if (elapsedDays <= 0)
+                {
+                    rows[i].Rolling7ResolvedPerDay = 0;
+                    rows[i].Rolling7NewPerDay = 0;
+                    rows[i].Rolling7NetBurnPerDay = 0;
+                    rows[i].ForecastDaysToZero = null;
+                    rows[i].ForecastFinishDate = null;
+                    continue;
+                }
+
                 double resolvedPerDay = window.Sum(x => x.Resolved) / elapsedDays;
                 double newPerDay = window.Sum(x => x.Inflow) / elapsedDays;
                 double netBurnPerDay = resolvedPerDay - newPerDay;
@@ -660,15 +679,15 @@ namespace HUMAIN.CoordinationTracker
         {
             using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
             {
-                writer.WriteLine("SnapshotDateTime,SnapshotDate,Previous,Current,New,Reopened,Existing,Resolved,Inflow,NetChange,NetBurn,ResolutionRatePct,Rolling7ResolvedPerDay,Rolling7NewPerDay,Rolling7NetBurnPerDay,ForecastDaysToZero,ForecastFinishDate");
+                writer.WriteLine("SnapshotDateTime,SnapshotDate,IsBaseline,IntervalDays,Previous,Current,New,Reopened,Existing,Resolved,Inflow,NetChange,NetBurn,ResolutionRatePct,Rolling7ResolvedPerDay,Rolling7NewPerDay,Rolling7NetBurnPerDay,ForecastDaysToZero,ForecastFinishDate");
                 foreach (DailyMetric r in rows)
                 {
                     writer.WriteLine(string.Join(",", new[]
                     {
                         Csv(r.Date.ToString("yyyy-MM-dd HH:mm:ss")), Csv(r.Date.ToString("yyyy-MM-dd")),
-                        r.Previous.ToString(), r.Current.ToString(), r.New.ToString(), r.Reopened.ToString(),
-                        r.Existing.ToString(), r.Resolved.ToString(), r.Inflow.ToString(), r.NetChange.ToString(),
-                        r.NetBurn.ToString(), Number(r.ResolutionRatePct), Number(r.Rolling7ResolvedPerDay),
+                        Csv(r.IsBaseline ? "Yes" : "No"), Number(r.IntervalDays), r.Previous.ToString(), r.Current.ToString(),
+                        r.New.ToString(), r.Reopened.ToString(), r.Existing.ToString(), r.Resolved.ToString(), r.Inflow.ToString(),
+                        r.NetChange.ToString(), r.NetBurn.ToString(), Number(r.ResolutionRatePct), Number(r.Rolling7ResolvedPerDay),
                         Number(r.Rolling7NewPerDay), Number(r.Rolling7NetBurnPerDay), Number(r.ForecastDaysToZero),
                         Csv(r.ForecastFinishDate.HasValue ? r.ForecastFinishDate.Value.ToString("yyyy-MM-dd") : string.Empty)
                     }));
@@ -772,6 +791,7 @@ namespace HUMAIN.CoordinationTracker
             var prevByTest = previous.Records.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
             var currByTest = current.Records.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
             var resolvedByTest = comparison.Resolved.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+            bool isBaseline = comparison.StateByGuid.Count > 0 && comparison.StateByGuid.All(x => x.Value == "Baseline");
 
             foreach (string test in allTests.OrderBy(x => x))
             {
@@ -790,7 +810,7 @@ namespace HUMAIN.CoordinationTracker
                     Csv(date.ToString("yyyy-MM-dd HH:mm:ss")), Csv(date.ToString("yyyy-MM-dd")),
                     Csv(test), Csv(meta.Severity), Csv(meta.DisciplineA), Csv(meta.DisciplineB), Csv(meta.DisciplinePair),
                     previousCount.ToString(), currentCount.ToString(), newCount.ToString(), reopened.ToString(), existing.ToString(),
-                    resolved.ToString(), (currentCount - previousCount).ToString(), Number(rate)
+                    resolved.ToString(), (isBaseline ? 0 : currentCount - previousCount).ToString(), Number(isBaseline ? 0 : rate)
                 }));
             }
         }
@@ -1047,6 +1067,8 @@ namespace HUMAIN.CoordinationTracker
             public int NetChange { get; set; }
             public int NetBurn { get; set; }
             public double ResolutionRatePct { get; set; }
+            public bool IsBaseline { get; set; }
+            public double IntervalDays { get; set; }
             public double Rolling7ResolvedPerDay { get; set; }
             public double Rolling7NewPerDay { get; set; }
             public double Rolling7NetBurnPerDay { get; set; }
