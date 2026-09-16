@@ -3,10 +3,10 @@
   "name": "quality_register",
   "position": {
     "x": 24,
-    "y": 445,
-    "width": 1552,
-    "height": 490,
-    "z": 10000
+    "y": 542,
+    "z": 9000,
+    "height": 393,
+    "width": 1552
   },
   "visual": {
     "visualType": "tableEx",
@@ -41,6 +41,76 @@
               },
               "queryRef": "SnapshotQuality.TestName",
               "nativeQueryRef": "TestName"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "SnapshotQuality"
+                    }
+                  },
+                  "Property": "ReviewStatus"
+                }
+              },
+              "queryRef": "SnapshotQuality.ReviewStatus",
+              "nativeQueryRef": "ReviewStatus"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "SnapshotQuality"
+                    }
+                  },
+                  "Property": "RequiresAction"
+                }
+              },
+              "queryRef": "SnapshotQuality.RequiresAction",
+              "nativeQueryRef": "RequiresAction"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "SnapshotQuality"
+                    }
+                  },
+                  "Property": "ReviewReason"
+                }
+              },
+              "queryRef": "SnapshotQuality.ReviewReason",
+              "nativeQueryRef": "ReviewReason"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "SnapshotQuality"
+                    }
+                  },
+                  "Property": "ReviewedBy"
+                }
+              },
+              "queryRef": "SnapshotQuality.ReviewedBy",
+              "nativeQueryRef": "ReviewedBy"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "SnapshotQuality"
+                    }
+                  },
+                  "Property": "ReviewedAt"
+                }
+              },
+              "queryRef": "SnapshotQuality.ReviewedAt",
+              "nativeQueryRef": "ReviewedAt"
             },
             {
               "field": {
@@ -454,7 +524,6 @@
     "filters": [
       {
         "name": "PeriodAlerts",
-        "type": "Advanced",
         "field": {
           "Measure": {
             "Expression": {
@@ -465,6 +534,7 @@
             "Property": "Quality Row Visible"
           }
         },
+        "type": "Advanced",
         "filter": {
           "Version": 2,
           "From": [

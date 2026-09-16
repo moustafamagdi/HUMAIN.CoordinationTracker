@@ -1,12 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "quality_banner",
+  "name": "quality_review_card0",
   "position": {
-    "x": 540,
-    "y": 240,
-    "z": 15000,
-    "height": 60,
-    "width": 1036
+    "x": 24,
+    "y": 440,
+    "width": 508,
+    "height": 85,
+    "z": 5100
   },
   "visual": {
     "visualType": "card",
@@ -22,11 +22,11 @@
                       "Entity": "Metrics"
                     }
                   },
-                  "Property": "Quality Banner"
+                  "Property": "Quality Action Required"
                 }
               },
-              "queryRef": "Metrics.Quality Banner",
-              "nativeQueryRef": "Quality Banner"
+              "queryRef": "Metrics.Quality Action Required",
+              "nativeQueryRef": "Quality Action Required"
             }
           ]
         }
@@ -41,7 +41,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A96800'"
+                      "Value": "'#ECF2F8'"
                     }
                   }
                 }
@@ -50,14 +50,14 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "30D"
                 }
               }
             },
             "labelDisplayUnits": {
               "expr": {
                 "Literal": {
-                  "Value": "0D"
+                  "Value": "1D"
                 }
               }
             }
@@ -85,7 +85,25 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#142235'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
                 }
               }
             }
@@ -118,14 +136,14 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "''"
+                  "Value": "'ACTION REQUIRED'"
                 }
               }
             },
@@ -134,7 +152,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#172B45'"
+                      "Value": "'#ECF2F8'"
                     }
                   }
                 }
@@ -198,6 +216,26 @@
               "expr": {
                 "Literal": {
                   "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "visualTooltip": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "type": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Default'"
                 }
               }
             }

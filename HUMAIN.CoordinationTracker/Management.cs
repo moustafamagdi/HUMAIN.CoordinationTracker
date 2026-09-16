@@ -10,7 +10,7 @@ namespace HUMAIN.CoordinationTracker
     internal partial class Program
     {
         private static Action<string> ManagementFault;
-        private static readonly string[] ManagedNames = { "Snapshots", "PowerBI", "clash_history.csv" };
+        private static readonly string[] ManagedNames = { "Snapshots", "QualityReviews", "PowerBI", "clash_history.csv" };
 
         private static void CleanTransaction(string path, string root)
         {
@@ -68,6 +68,9 @@ namespace HUMAIN.CoordinationTracker
                     text.Append(f.Substring(SnapshotsRoot.Length));
                     using (var stream = File.OpenRead(f)) text.Append(Convert.ToBase64String(sha.ComputeHash(stream)));
                 }
+                string reviews = Path.Combine(AppRoot, "QualityReviews");
+                if (Directory.Exists(reviews)) foreach (string f in Directory.GetFiles(reviews, "*", SearchOption.AllDirectories).OrderBy(x => x, StringComparer.Ordinal))
+                { text.Append(f.Substring(reviews.Length)); using (var stream = File.OpenRead(f)) text.Append(Convert.ToBase64String(sha.ComputeHash(stream))); }
                 return Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(text.ToString())));
             }
         }
@@ -114,6 +117,7 @@ namespace HUMAIN.CoordinationTracker
                 string stage = Path.Combine(operation, "stage");
                 Directory.CreateDirectory(stage);
                 CopyTree(SnapshotsRoot, Path.Combine(stage, "Snapshots"));
+                CopyTree(Path.Combine(AppRoot, "QualityReviews"), Path.Combine(stage, "QualityReviews"));
                 DashboardSummary result;
                 try
                 {

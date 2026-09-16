@@ -49,6 +49,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Workflow.cs" />
     <Compile Include="Quality.cs" />
+    <Compile Include="QualityReviews.cs" />
     <Compile Include="Management.cs" />
     <Compile Include="ManagerForm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

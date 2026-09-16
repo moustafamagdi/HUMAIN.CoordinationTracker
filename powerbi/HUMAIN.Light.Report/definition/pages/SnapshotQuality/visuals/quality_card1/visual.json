@@ -4,9 +4,9 @@
   "position": {
     "x": 338,
     "y": 320,
-    "width": 296,
+    "z": 2000,
     "height": 105,
-    "z": 5001
+    "width": 296
   },
   "visual": {
     "visualType": "card",

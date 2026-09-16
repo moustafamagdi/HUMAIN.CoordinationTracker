@@ -24,7 +24,7 @@ namespace HUMAIN.CoordinationTracker
             try
             {
                 Console.OutputEncoding = Encoding.UTF8;
-                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); return; }
+                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); RunQualityReviewTests(); return; }
                 int rootArg = Array.IndexOf(args, "--data-root");
                 if (rootArg >= 0)
                 {
@@ -105,6 +105,7 @@ namespace HUMAIN.CoordinationTracker
         {
             Directory.CreateDirectory(AppRoot);
             Directory.CreateDirectory(SnapshotsRoot);
+            Directory.CreateDirectory(Path.Combine(AppRoot, "QualityReviews"));
             Directory.CreateDirectory(PowerBiRoot);
         }
 

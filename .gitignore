@@ -376,3 +376,5 @@ Backups/
 .manager.lock
 pending-operation.txt
 operations.log
+
+QualityReviews/

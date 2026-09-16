@@ -42,6 +42,7 @@ namespace HUMAIN.CoordinationTracker
                 string before = ProjectSummary(), root = AppRoot;
                 string stage = Path.Combine(root, "Transactions", "preview-" + Guid.NewGuid().ToString("N"));
                 CopyTree(SnapshotsRoot, Path.Combine(stage, "Snapshots"));
+                CopyTree(Path.Combine(AppRoot, "QualityReviews"), Path.Combine(stage, "QualityReviews"));
                 try
                 {
                     SetRoot(stage); EnsureFolders(); action(); ValidateSnapshots(); RebuildDerivedFiles();
@@ -74,7 +75,7 @@ namespace HUMAIN.CoordinationTracker
                 layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 66));
                 layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));
                 layout.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
-                layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
+                layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 76));
                 layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
                 layout.RowStyles.Add(new RowStyle(SizeType.Percent, 58));
                 layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
@@ -97,7 +98,7 @@ namespace HUMAIN.CoordinationTracker
                 layout.Controls.Add(grid);
                 actions.Dock = DockStyle.Fill;
                 actions.Controls.AddRange(new Control[] {
-                    MakeButton("Reload list", () => Reload()), MakeButton("Preview exclusion", () => PrepareExclusion(true)),
+                    MakeButton("Quality reviews", () => { InvalidatePreview(); using (var dialog = new QualityReviewForm()) dialog.ShowDialog(this); }), MakeButton("Reload list", () => Reload()), MakeButton("Preview exclusion", () => PrepareExclusion(true)),
                     MakeButton("Preview restore", () => PrepareExclusion(false)), MakeButton("Preview rebuild", () => Prepare("Rebuild outputs", delegate { }, "Rebuild the derived CSVs from active snapshots.")),
                     MakeButton("Backup now", () => BackupNow()), MakeButton("Open backups", () => OpenFolder(Path.Combine(AppRoot, "Backups"))),
                     MakeButton("Open CSV folder", () => OpenFolder(PowerBiRoot)) });

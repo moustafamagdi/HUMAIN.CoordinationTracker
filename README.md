@@ -174,3 +174,9 @@ The self-test currently passes 204 workflow, 11 quality and 22 snapshot-manageme
 ## Framework
 
 C# / .NET Framework 4.8. No external packages are required.
+
+## Quality reviews (1.2)
+
+Use **Quality reviews** in the Windows manager to record Pending Review, Accepted or Needs Correction with a required reason and reviewer. Decisions are bound to source interval fingerprints and included in backup/recovery. Original alerts and operational counts remain unchanged. Power BI forecasts gate on unresolved action requirements, not all historical flags. Missing/added test scope alerts remain blockers even if accepted.
+
+[Arabic quality review guide](docs/quality-reviews.ar.md). Use 1.2 for all imports/rebuilds; older executables omit review columns. The complete test suite now has 255 assertions.

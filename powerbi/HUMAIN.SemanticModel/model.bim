@@ -1867,7 +1867,7 @@
           {
             "name": "Quality Banner",
             "displayFolder": "Reporting period",
-            "expression": "VAR flags = CALCULATE([Quality Flags],REMOVEFILTERS(Tests)) RETURN IF([Period Snapshots]=0,\"NO EXPORT IN PERIOD | Movement = 0; stock is last known. Check snapshot date.\",IF(flags>0,\"REVIEW DATA | \" & FORMAT(flags,\"0\") & \" test/snapshot alerts. See Snapshot Quality.\",\"QUALITY CHECK | No rule triggered; export completeness is not guaranteed.\"))",
+            "expression": "VAR flags = CALCULATE([Quality Flags],REMOVEFILTERS(Tests)) VAR pending = CALCULATE([Quality Action Required],REMOVEFILTERS(Tests)) RETURN IF([Period Snapshots]=0,\"NO EXPORT IN PERIOD | Movement = 0; stock is last known. Check snapshot date.\",IF(pending>0,\"REVIEW DATA | \" & FORMAT(pending,\"0\") & \" alerts require action. Review in Tracker.\",IF(flags>0,\"REVIEWED | \" & FORMAT(flags,\"0\") & \" original alerts retained; none require action in period.\",\"QUALITY CHECK | No rule triggered; export completeness is not guaranteed.\")))",
             "lineageTag": "1c688b80-3234-4001-8ae2-66ff5cecdfbd"
           },
           {
@@ -1879,7 +1879,7 @@
           {
             "name": "Recent Quality Flags",
             "displayFolder": "Reporting period",
-            "expression": "VAR s = [Selected Snapshot] RETURN CALCULATE(SUM(SnapshotQuality[HasAlert]),REMOVEFILTERS(Snapshots),REMOVEFILTERS(Tests),Snapshots[SnapshotDateTime]>s-7,Snapshots[SnapshotDateTime]<=s)",
+            "expression": "VAR s = [Selected Snapshot] RETURN CALCULATE(SUM(SnapshotQuality[RequiresAction]),REMOVEFILTERS(Snapshots),REMOVEFILTERS(Tests),Snapshots[SnapshotDateTime]>s-7,Snapshots[SnapshotDateTime]<=s)",
             "lineageTag": "e5070ac6-5116-4900-9bb9-a3d0ec9124e4"
           },
           {
@@ -1887,6 +1887,21 @@
             "displayFolder": "Presentation colors",
             "expression": "IF([Net Reduction] < 0, \"#C33D55\", \"#087F75\")",
             "lineageTag": "1e50ddc2-dec5-40dc-922c-64feecf5dff5"
+          },
+          {
+            "name": "Quality Action Required",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(SnapshotQuality[RequiresAction]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "lineageTag": "ce44e43e-fc26-481b-94b4-804904aaed54"
+          },
+          {
+            "name": "Accepted Quality Reviews",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(COUNTROWS(SnapshotQuality),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,SnapshotQuality[HasAlert]=1,SnapshotQuality[ReviewStatus]=\"Accepted\"),0)",
+            "lineageTag": "aa222c46-af52-4324-9ed2-c01bce752413"
+          },
+          {
+            "name": "Quality Needs Correction",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(COUNTROWS(SnapshotQuality),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,SnapshotQuality[HasAlert]=1,SnapshotQuality[ReviewStatus]=\"Needs Correction\"),0)",
+            "lineageTag": "9218883d-0d7c-41dc-b58e-a8dadcbf700b"
           }
         ],
         "partitions": [
@@ -2267,6 +2282,48 @@
             "lineageTag": "333c7639-d669-4bda-abca-50c4ab737a09",
             "sourceColumn": "Reason",
             "summarizeBy": "none"
+          },
+          {
+            "name": "AlertId",
+            "dataType": "string",
+            "lineageTag": "61d156a4-545d-4028-a432-2adb8bbc9856",
+            "sourceColumn": "AlertId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReviewStatus",
+            "dataType": "string",
+            "lineageTag": "dcff3c0c-99fa-4deb-96a7-0740eb37563c",
+            "sourceColumn": "ReviewStatus",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReviewReason",
+            "dataType": "string",
+            "lineageTag": "57fe207a-3c1f-442d-97d5-402b47f2c75e",
+            "sourceColumn": "ReviewReason",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReviewedBy",
+            "dataType": "string",
+            "lineageTag": "537784ac-656e-4fb1-8c72-f087795ce80b",
+            "sourceColumn": "ReviewedBy",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReviewedAt",
+            "dataType": "string",
+            "lineageTag": "d2c81433-20bb-4d97-b094-129c11cd1004",
+            "sourceColumn": "ReviewedAt",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "RequiresAction",
+            "dataType": "int64",
+            "lineageTag": "7d7a9843-f92d-42bb-8972-9b0b28862e23",
+            "sourceColumn": "RequiresAction",
+            "summarizeBy": "none"
           }
         ],
         "lineageTag": "8223890a-dd40-44db-8050-8f47fb5c1cb0",
@@ -2279,7 +2336,8 @@
                 "let",
                 " Source = Csv.Document(File.Contents(SourceFolder & \"\\SnapshotQuality.csv\"),[Delimiter=\",\",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),",
                 " Headers = Table.PromoteHeaders(Source,[PromoteAllScalars=true]),",
-                " Typed = Table.TransformColumnTypes(Headers,{{\"SnapshotDateTime\",type datetime},{\"SnapshotDate\",type datetime},{\"TestName\",type text},{\"PresentInExport\",Int64.Type},{\"PreviousPresent\",Int64.Type},{\"TestMissing\",Int64.Type},{\"TestAdded\",Int64.Type},{\"PreviousTotal\",Int64.Type},{\"CurrentTotal\",Int64.Type},{\"DropPct\",type number},{\"LargeDrop\",Int64.Type},{\"UnknownStatuses\",Int64.Type},{\"Disappeared\",Int64.Type},{\"HasAlert\",Int64.Type},{\"Reason\",type text}},\"en-US\")",
+                " Compatible = List.Accumulate({\"AlertId\",\"ReviewStatus\",\"ReviewReason\",\"ReviewedBy\",\"ReviewedAt\",\"RequiresAction\"}, Headers, (state, col) => if Table.HasColumns(state,col) then state else Table.AddColumn(state,col,each if col=\"RequiresAction\" then Number.From([HasAlert]) else if col=\"ReviewStatus\" then \"Pending Review\" else \"\")),",
+                " Typed = Table.TransformColumnTypes(Compatible,{{\"SnapshotDateTime\",type datetime},{\"SnapshotDate\",type datetime},{\"TestName\",type text},{\"PresentInExport\",Int64.Type},{\"PreviousPresent\",Int64.Type},{\"TestMissing\",Int64.Type},{\"TestAdded\",Int64.Type},{\"PreviousTotal\",Int64.Type},{\"CurrentTotal\",Int64.Type},{\"DropPct\",type number},{\"LargeDrop\",Int64.Type},{\"UnknownStatuses\",Int64.Type},{\"Disappeared\",Int64.Type},{\"HasAlert\",Int64.Type},{\"Reason\",type text},{\"AlertId\",type text},{\"ReviewStatus\",type text},{\"ReviewReason\",type text},{\"ReviewedBy\",type text},{\"ReviewedAt\",type text},{\"RequiresAction\",Int64.Type}},\"en-US\")",
                 "in Typed"
               ],
               "type": "m"

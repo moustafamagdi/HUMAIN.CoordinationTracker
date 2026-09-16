@@ -7,7 +7,7 @@ namespace HUMAIN.CoordinationTracker
 {
     internal partial class Program
     {
-        private const string QualityHeader = "SnapshotDateTime,SnapshotDate,TestName,PresentInExport,PreviousPresent,TestMissing,TestAdded,PreviousTotal,CurrentTotal,DropPct,LargeDrop,UnknownStatuses,Disappeared,HasAlert,Reason";
+        private const string QualityHeader = "SnapshotDateTime,SnapshotDate,TestName,PresentInExport,PreviousPresent,TestMissing,TestAdded,PreviousTotal,CurrentTotal,DropPct,LargeDrop,UnknownStatuses,Disappeared,HasAlert,Reason,AlertId,ReviewStatus,ReviewReason,ReviewedBy,ReviewedAt,RequiresAction";
         private class QualityMetric
         {
             public int PresentInExport, PreviousPresent, TestMissing, TestAdded, PreviousTotal, CurrentTotal;
@@ -49,11 +49,15 @@ namespace HUMAIN.CoordinationTracker
             foreach (string test in tests.OrderBy(x => x))
             {
                 var m = BuildQuality(prevTests.Contains(test), currTests.Contains(test), p[test].ToList(), c[test].ToList(), previous.Date == DateTime.MinValue);
+                string alertId = QualityAlertId(previous, current, test);
+                QualityDecision decision = ReadQualityDecision(alertId);
                 writer.WriteLine(string.Join(",", new[] {
                     Csv(current.Date.ToString("yyyy-MM-dd HH:mm:ss")), Csv(current.Date.ToString("yyyy-MM-dd")), Csv(test),
                     m.PresentInExport.ToString(), m.PreviousPresent.ToString(), m.TestMissing.ToString(), m.TestAdded.ToString(),
                     m.PreviousTotal.ToString(), m.CurrentTotal.ToString(), Number(m.DropPct), m.LargeDrop.ToString(), m.UnknownStatuses.ToString(),
-                    m.Disappeared.ToString(), m.HasAlert.ToString(), Csv(m.Reason)
+                    m.Disappeared.ToString(), m.HasAlert.ToString(), Csv(m.Reason), Csv(alertId),
+                    Csv(m.HasAlert == 0 ? "Not required" : decision.Status), Csv(decision.Reason), Csv(decision.Reviewer), Csv(decision.ReviewedAt),
+                    RequiresQualityAction(m, decision).ToString()
                 }));
             }
         }
