@@ -2,6 +2,14 @@
 
 Local Navisworks clash-history tracker for the HUMAIN project.
 
+## Snapshot Manager (Windows interface)
+
+Launch the executable without arguments to open the snapshot list, import preview, selected-snapshot replacement, reversible exclusion/restoration, and backup controls. Changes rebuild in staging and publish with rollback/recovery. Refresh Power BI only after completion.
+
+[Arabic Snapshot Manager guide](docs/snapshot-manager.ar.md)
+
+Use `--console` for the previous interactive command-line workflow, or `--gui --data-root C:\path\to\project` for an isolated project. Backup restore of a whole project is not a UI feature in this release; Restore refers to excluded snapshots.
+
 ## Daily workflow
 
 1. Refresh the NWC files in the coordination NWF.
@@ -9,7 +17,7 @@ Local Navisworks clash-history tracker for the HUMAIN project.
 3. Export reports as **All tests (separate) / XML**.
 4. Put the XML files in one folder.
 5. Run `HUMAIN.CoordinationTracker`.
-6. Enter the XML folder and snapshot date.
+6. Choose the XML folder and actual snapshot timestamp, review Preview import, then approve.
 7. Refresh Power BI.
 
 The tracker uses the Navisworks clash result GUID as the historical identity and classifies each daily result as:
@@ -63,7 +71,7 @@ Snapshots are stored under:
 
 `Snapshots\yyyy-MM-dd\`
 
-Re-importing an existing date replaces that snapshot and rebuilds all derived files chronologically, so imports can be corrected or inserted out of order.
+Multiple snapshots per day are supported. In the UI, replacement targets the selected snapshot and preserves its timestamp; new imports use the selected date and time. Active snapshots rebuild chronologically, so imports can be corrected or inserted out of order. Excluded snapshots remain on disk and are omitted from calculations.
 
 ## Power BI folder
 
@@ -161,7 +169,7 @@ The complete Dark and Light reports share one semantic model in [powerbi](powerb
 
 `SnapshotQuality.csv` records missing/added tests, large physical record drops (at least 100 and 30%), and unknown statuses. Alerts flag possible export issues without changing closure counts. The actionable forecast is suppressed when recent quality alerts exist.
 
-The self-test currently passes 204 workflow and 11 quality assertions. Local exports, snapshots, binaries and Power BI caches are not distributed. Configure SourceFolder before the first report refresh.
+The self-test currently passes 204 workflow, 11 quality and 22 snapshot-management assertions. Local exports, snapshots, binaries and Power BI caches are not distributed. Configure SourceFolder before the first report refresh.
 
 ## Framework
 

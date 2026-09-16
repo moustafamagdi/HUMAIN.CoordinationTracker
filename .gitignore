@@ -369,3 +369,10 @@ FodyWeavers.xsd
 Snapshots/
 PowerBI/
 !powerbi/
+
+# Snapshot Manager local operation state
+Transactions/
+Backups/
+.manager.lock
+pending-operation.txt
+operations.log

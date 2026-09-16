@@ -18,12 +18,13 @@ namespace HUMAIN.CoordinationTracker
         private static string PowerBiRoot = Path.Combine(AppRoot, "PowerBI");
         private static string HistoryFile = Path.Combine(AppRoot, "clash_history.csv");
 
+        [STAThread]
         static void Main(string[] args)
         {
             try
             {
                 Console.OutputEncoding = Encoding.UTF8;
-                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); return; }
+                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); return; }
                 int rootArg = Array.IndexOf(args, "--data-root");
                 if (rootArg >= 0)
                 {
@@ -34,7 +35,9 @@ namespace HUMAIN.CoordinationTracker
                     HistoryFile = Path.Combine(AppRoot, "clash_history.csv");
                 }
                 EnsureFolders();
-                if (args.Contains("--rebuild")) { RebuildDerivedFiles(); Console.WriteLine("Rebuild completed: " + PowerBiRoot); return; }
+                using (AcquireProjectLock()) RecoverPending();
+                if (args.Length == 0 || args.Contains("--gui")) { System.Windows.Forms.Application.EnableVisualStyles(); System.Windows.Forms.Application.Run(new ManagerForm()); return; }
+                if (args.Contains("--rebuild")) { CommitChange("Rebuild", delegate { }); Console.WriteLine("Rebuild completed: " + PowerBiRoot); return; }
 
                 Console.WriteLine("HUMAIN Coordination Tracker");
                 Console.WriteLine("===========================");
@@ -68,8 +71,12 @@ namespace HUMAIN.CoordinationTracker
                 HashSet<string> everSeenBefore = LoadEverSeenBefore(snapshotDateTime, choice.FolderPath);
                 ComparisonResult comparison = CompareSnapshots(previous.Records, imported.Records, everSeenBefore, previous.Date == DateTime.MinValue);
 
-                SaveSnapshot(choice, imported);
-                DashboardSummary dashboard = RebuildDerivedFiles();
+                string expectedRevision = SnapshotRevision();
+                Console.WriteLine(MessagePreview(imported, choice.Timestamp, choice.IsOverwrite ? Path.GetFileName(choice.FolderPath) : null));
+                Console.Write("Commit this import? [Y/N]: ");
+                if (!string.Equals(Console.ReadLine(), "Y", StringComparison.OrdinalIgnoreCase)) return;
+                string snapshotName = Path.GetFileName(choice.FolderPath);
+                DashboardSummary dashboard = CommitChange("Console import " + snapshotName, delegate { choice.FolderPath = Path.Combine(SnapshotsRoot, snapshotName); SaveSnapshot(choice, imported); }, expectedRevision);
                 PrintSummary(snapshotDateTime, imported, previous, comparison, dashboard);
 
                 Console.WriteLine();
@@ -231,13 +238,14 @@ namespace HUMAIN.CoordinationTracker
                 try
                 {
                     XDocument doc = XDocument.Load(file, LoadOptions.None);
+                    if (doc.Descendants().Count(x => LocalName(x) == "clashtest") != 1) throw new InvalidDataException("Expected one Clash Test per XML. Export All tests (separate).");
                     string testName = GetTestName(doc, file);
                     tests.Add(testName);
 
                     foreach (XElement clash in doc.Descendants().Where(x => LocalName(x) == "clashresult"))
                     {
                         string guid = Attr(clash, "guid");
-                        if (string.IsNullOrWhiteSpace(guid)) continue;
+                        if (string.IsNullOrWhiteSpace(guid)) throw new InvalidDataException("A clash result is missing its GUID.");
 
                         TestMetadata metadata = ParseTestMetadata(testName);
                         var record = new ClashRecord
@@ -286,10 +294,10 @@ namespace HUMAIN.CoordinationTracker
             if (failedFiles > 0)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Warning: " + failedFiles + " XML file(s) could not be parsed.");
-                Console.ResetColor();
+                throw new InvalidDataException(failedFiles + " XML file(s) could not be parsed. Nothing was imported. Fix the export and retry.");
             }
 
+            if (results.GroupBy(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase).Any(g => g.Count() > 1)) throw new InvalidDataException("Duplicate clash GUIDs found. Remove duplicate XML reports before importing.");
             return new SnapshotData
             {
                 Date = snapshotDateTime,
@@ -466,13 +474,14 @@ namespace HUMAIN.CoordinationTracker
             Console.ResetColor();
         }
 
-        private static List<SnapshotRef> GetSnapshotRefs()
+        private static List<SnapshotRef> GetSnapshotRefs(bool includeExcluded = false)
         {
             var result = new List<SnapshotRef>();
             if (!Directory.Exists(SnapshotsRoot)) return result;
 
             foreach (string folder in Directory.GetDirectories(SnapshotsRoot))
             {
+                if (!includeExcluded && File.Exists(Path.Combine(folder, "excluded.txt"))) continue;
                 string name = Path.GetFileName(folder);
                 DateTime timestamp;
                 bool valid = DateTime.TryParseExact(name, "yyyy-MM-dd_HHmmss", CultureInfo.InvariantCulture,
