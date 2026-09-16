@@ -8,22 +8,33 @@ using System.Xml.Linq;
 
 namespace HUMAIN.CoordinationTracker
 {
-    internal class Program
+    internal partial class Program
     {
-        private static readonly string AppRoot = Path.Combine(
+        private static string AppRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "HUMAIN.CoordinationTracker");
 
-        private static readonly string SnapshotsRoot = Path.Combine(AppRoot, "Snapshots");
-        private static readonly string PowerBiRoot = Path.Combine(AppRoot, "PowerBI");
-        private static readonly string HistoryFile = Path.Combine(AppRoot, "clash_history.csv");
+        private static string SnapshotsRoot = Path.Combine(AppRoot, "Snapshots");
+        private static string PowerBiRoot = Path.Combine(AppRoot, "PowerBI");
+        private static string HistoryFile = Path.Combine(AppRoot, "clash_history.csv");
 
         static void Main(string[] args)
         {
             try
             {
                 Console.OutputEncoding = Encoding.UTF8;
+                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); return; }
+                int rootArg = Array.IndexOf(args, "--data-root");
+                if (rootArg >= 0)
+                {
+                    if (rootArg + 1 >= args.Length) throw new ArgumentException("--data-root requires a directory");
+                    AppRoot = Path.GetFullPath(args[rootArg + 1]);
+                    SnapshotsRoot = Path.Combine(AppRoot, "Snapshots");
+                    PowerBiRoot = Path.Combine(AppRoot, "PowerBI");
+                    HistoryFile = Path.Combine(AppRoot, "clash_history.csv");
+                }
                 EnsureFolders();
+                if (args.Contains("--rebuild")) { RebuildDerivedFiles(); Console.WriteLine("Rebuild completed: " + PowerBiRoot); return; }
 
                 Console.WriteLine("HUMAIN Coordination Tracker");
                 Console.WriteLine("===========================");
@@ -55,7 +66,7 @@ namespace HUMAIN.CoordinationTracker
 
                 SnapshotData previous = LoadPreviousSnapshot(snapshotDateTime, choice.FolderPath);
                 HashSet<string> everSeenBefore = LoadEverSeenBefore(snapshotDateTime, choice.FolderPath);
-                ComparisonResult comparison = CompareSnapshots(previous.Records, imported.Records, everSeenBefore);
+                ComparisonResult comparison = CompareSnapshots(previous.Records, imported.Records, everSeenBefore, previous.Date == DateTime.MinValue);
 
                 SaveSnapshot(choice, imported);
                 DashboardSummary dashboard = RebuildDerivedFiles();
@@ -75,6 +86,8 @@ namespace HUMAIN.CoordinationTracker
                 Console.WriteLine();
                 Console.WriteLine("ERROR:");
                 Console.WriteLine(ex.Message);
+                Environment.ExitCode = 1;
+                if (args.Length > 0) return;
                 Console.ResetColor();
             }
 
@@ -405,23 +418,27 @@ namespace HUMAIN.CoordinationTracker
                 Path.GetFullPath(b ?? string.Empty).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
         }
 
-        private static ComparisonResult CompareSnapshots(List<ClashRecord> previous, List<ClashRecord> current, HashSet<string> everSeenBefore)
+        private static ComparisonResult CompareSnapshots(List<ClashRecord> previous, List<ClashRecord> current, HashSet<string> everSeenBefore, bool isBaseline)
         {
             var previousMap = previous.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
             var currentMap = current.ToDictionary(x => x.ClashGuid, StringComparer.OrdinalIgnoreCase);
             var result = new ComparisonResult();
-            bool isBaseline = previous.Count == 0 && everSeenBefore.Count == 0;
-
             foreach (ClashRecord c in current)
             {
-                if (isBaseline) result.StateByGuid[c.ClashGuid] = "Baseline";
-                else if (previousMap.ContainsKey(c.ClashGuid)) result.StateByGuid[c.ClashGuid] = "Existing";
+                ClashRecord p;
+                bool wasPresent = previousMap.TryGetValue(c.ClashGuid, out p);
+                if (IsResolved(c)) result.StateByGuid[c.ClashGuid] = "Resolved";
+                else if (isBaseline) result.StateByGuid[c.ClashGuid] = "Baseline";
+                else if (wasPresent && !IsResolved(p)) result.StateByGuid[c.ClashGuid] = "Existing";
                 else if (everSeenBefore.Contains(c.ClashGuid)) result.StateByGuid[c.ClashGuid] = "Reopened";
                 else result.StateByGuid[c.ClashGuid] = "New";
             }
-
-            foreach (ClashRecord p in previous)
-                if (!currentMap.ContainsKey(p.ClashGuid)) result.Resolved.Add(p);
+            // Count a closure only on the transition out of unresolved; later Compact is not a second closure.
+            if (!isBaseline) foreach (ClashRecord p in previous.Where(x => !IsResolved(x)))
+            {
+                ClashRecord c;
+                if (!currentMap.TryGetValue(p.ClashGuid, out c) || IsResolved(c)) result.Resolved.Add(c ?? p);
+            }
             return result;
         }
 
@@ -540,18 +557,24 @@ namespace HUMAIN.CoordinationTracker
 
             using (var historyWriter = new StreamWriter(HistoryFile, false, new UTF8Encoding(true)))
             using (var testWriter = new StreamWriter(testFile, false, new UTF8Encoding(true)))
+            using (var operationalWriter = new StreamWriter(Path.Combine(PowerBiRoot, "OperationalProgress.csv"), false, new UTF8Encoding(true)))
+            using (var qualityWriter = new StreamWriter(Path.Combine(PowerBiRoot, "SnapshotQuality.csv"), false, new UTF8Encoding(true)))
             {
                 historyWriter.WriteLine(HistoryHeader());
+                operationalWriter.WriteLine(OperationalHeader);
+                qualityWriter.WriteLine(QualityHeader);
                 testWriter.WriteLine("SnapshotDateTime,SnapshotDate,TestName,Severity,DisciplineA,DisciplineB,DisciplinePair,Previous,Current,New,Reopened,Existing,Resolved,NetChange,ResolutionRatePct");
 
                 foreach (SnapshotRef snapshotRef in snapshots)
                 {
                     SnapshotData current = LoadSnapshot(snapshotRef);
-                    ComparisonResult comparison = CompareSnapshots(previous.Records, current.Records, everSeen);
+                    ComparisonResult comparison = CompareSnapshots(previous.Records, current.Records, everSeen, previous.Date == DateTime.MinValue);
                     UpdateLifecycle(lifecycle, current.Date, current, comparison);
                     WriteHistoryRows(historyWriter, current.Date, current.Records, comparison, lifecycle);
                     dailyRows.Add(BuildDailyMetric(current.Date, previous, current, comparison));
                     WriteTestPerformanceRows(testWriter, current.Date, previous, current, comparison);
+                    WriteOperationalRows(operationalWriter, previous, current, everSeen);
+                    WriteQualityRows(qualityWriter, previous, current);
 
                     foreach (ClashRecord record in current.Records) everSeen.Add(record.ClashGuid);
                     previous = current; latest = current; latestComparison = comparison;
@@ -595,7 +618,8 @@ namespace HUMAIN.CoordinationTracker
                 life.DisciplineA = record.DisciplineA;
                 life.DisciplineB = record.DisciplineB;
                 life.DisciplinePair = record.DisciplinePair;
-                life.IsOpen = true;
+                life.IsOpen = !IsResolved(record);
+                if (IsResolved(record) && !life.LastResolved.HasValue) life.LastResolved = date;
                 if (StateOf(comparison, record.ClashGuid) == "Reopened") life.ReopenCount++;
             }
 
@@ -613,26 +637,28 @@ namespace HUMAIN.CoordinationTracker
 
         private static DailyMetric BuildDailyMetric(DateTime date, SnapshotData previous, SnapshotData current, ComparisonResult comparison)
         {
-            bool isBaseline = comparison.StateByGuid.Count > 0 && comparison.StateByGuid.All(x => x.Value == "Baseline");
+            bool isBaseline = previous.Date == DateTime.MinValue;
             int newCount = comparison.StateByGuid.Count(x => x.Value == "New");
             int reopened = comparison.StateByGuid.Count(x => x.Value == "Reopened");
             int existing = comparison.StateByGuid.Count(x => x.Value == "Existing");
             int resolved = comparison.Resolved.Count;
             int inflow = newCount + reopened;
             int netBurn = resolved - inflow;
-            double resolutionRate = previous.Records.Count > 0 ? (resolved * 100.0 / previous.Records.Count) : 0;
+            int previousOpen = previous.Records.Count(x => !IsResolved(x));
+            int currentOpen = current.Records.Count(x => !IsResolved(x));
+            double resolutionRate = previousOpen > 0 ? (resolved * 100.0 / previousOpen) : 0;
             double intervalDays = previous.Date != DateTime.MinValue ? Math.Max(0, (date - previous.Date).TotalDays) : 0;
 
             return new DailyMetric
             {
                 Date = date,
-                Previous = previous.Records.Count,
-                Current = current.Records.Count,
+                Previous = previousOpen,
+                Current = currentOpen,
                 New = newCount,
                 Reopened = reopened,
                 Existing = existing,
                 Resolved = resolved,
-                NetChange = isBaseline ? 0 : current.Records.Count - previous.Records.Count,
+                NetChange = isBaseline ? 0 : currentOpen - previousOpen,
                 Inflow = isBaseline ? 0 : inflow,
                 NetBurn = isBaseline ? 0 : netBurn,
                 ResolutionRatePct = isBaseline ? 0 : resolutionRate,
@@ -708,7 +734,7 @@ namespace HUMAIN.CoordinationTracker
                         Csv(r.ClashGuid), Csv(r.TestName), Csv(r.Severity), Csv(r.DisciplineA), Csv(r.DisciplineB), Csv(r.DisciplinePair),
                         Csv(r.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss")), Csv(r.LastSeen.ToString("yyyy-MM-dd HH:mm:ss")),
                         Csv(r.LastResolved.HasValue ? r.LastResolved.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty),
-                        Csv(r.IsOpen ? "Open" : "Resolved"), age.ToString(), Csv(AgeBucket(age)), r.ReopenCount.ToString(),
+                        Csv(!r.IsOpen ? "Resolved" : string.Equals(r.LastStatus, "approved", StringComparison.OrdinalIgnoreCase) ? "Approved" : "Open"), age.ToString(), Csv(AgeBucket(age)), r.ReopenCount.ToString(),
                         r.ResolutionCount.ToString(), Csv(r.LastStatus), Number(r.LastDistance)
                     }));
                 }
@@ -733,7 +759,7 @@ namespace HUMAIN.CoordinationTracker
         private static DashboardSummary WriteDashboardKpi(string file, List<DailyMetric> dailyRows, IEnumerable<LifecycleRecord> lifecycle, SnapshotData latest)
         {
             DailyMetric latestDay = dailyRows.LastOrDefault() ?? new DailyMetric();
-            List<LifecycleRecord> open = lifecycle.Where(x => x.IsOpen).ToList();
+            List<LifecycleRecord> open = lifecycle.Where(x => x.IsOpen && !string.Equals(x.LastStatus, "approved", StringComparison.OrdinalIgnoreCase)).ToList();
             double avgAge = open.Count > 0 ? open.Average(x => Math.Max(0, (latest.Date - x.FirstSeen).TotalDays)) : 0;
             int stale14 = open.Count(x => (latest.Date - x.FirstSeen).TotalDays >= 14);
             int critical = open.Count(x => string.Equals(x.Severity, "Critical", StringComparison.OrdinalIgnoreCase));
@@ -773,7 +799,8 @@ namespace HUMAIN.CoordinationTracker
                 writer.WriteLine(ToHistoryCsvLine(r, state, life.FirstSeen, age, life.ReopenCount));
             }
 
-            foreach (ClashRecord r in comparison.Resolved)
+            var presentGuids = new HashSet<string>(current.Select(x => x.ClashGuid), StringComparer.OrdinalIgnoreCase);
+            foreach (ClashRecord r in comparison.Resolved.Where(x => !presentGuids.Contains(x.ClashGuid)))
             {
                 LifecycleRecord life;
                 DateTime firstSeen = date;
@@ -788,10 +815,10 @@ namespace HUMAIN.CoordinationTracker
             SnapshotData current, ComparisonResult comparison)
         {
             var allTests = new HashSet<string>(previous.Tests, StringComparer.OrdinalIgnoreCase); allTests.UnionWith(current.Tests);
-            var prevByTest = previous.Records.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
-            var currByTest = current.Records.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+            var prevByTest = previous.Records.Where(x => !IsResolved(x)).GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+            var currByTest = current.Records.Where(x => !IsResolved(x)).GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
             var resolvedByTest = comparison.Resolved.GroupBy(x => x.TestName, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
-            bool isBaseline = comparison.StateByGuid.Count > 0 && comparison.StateByGuid.All(x => x.Value == "Baseline");
+            bool isBaseline = previous.Date == DateTime.MinValue;
 
             foreach (string test in allTests.OrderBy(x => x))
             {
@@ -937,13 +964,16 @@ namespace HUMAIN.CoordinationTracker
             Console.WriteLine("SNAPSHOT SUMMARY"); Console.WriteLine("================"); Console.ResetColor();
             Console.WriteLine("Date/Time   : " + date.ToString("yyyy-MM-dd HH:mm:ss"));
             Console.WriteLine("Clash Tests : " + current.Tests.Count);
-            Console.WriteLine("Previous    : " + previous.Records.Count);
-            Console.WriteLine("Current     : " + current.Records.Count);
+            Console.WriteLine("Previous unresolved: " + previous.Records.Count(x => !IsResolved(x)));
+            Console.WriteLine("Unresolved  : " + current.Records.Count(x => !IsResolved(x)));
+            Console.WriteLine("Actionable  : " + current.Records.Count(IsActionable));
+            Console.WriteLine("Approved    : " + current.Records.Count(IsApproved));
+            Console.WriteLine("Resolved still present: " + current.Records.Count(IsResolved));
             Console.WriteLine("New         : " + newCount);
             Console.WriteLine("Reopened    : " + reopened);
             Console.WriteLine("Existing    : " + existing);
             Console.WriteLine("Resolved    : " + resolved);
-            Console.WriteLine("Net Change  : " + (current.Records.Count - previous.Records.Count));
+            Console.WriteLine("Net Change  : " + (current.Records.Count(x => !IsResolved(x)) - previous.Records.Count(x => !IsResolved(x))));
             Console.WriteLine("7D Net Burn : " + dashboard.RollingNetBurnPerDay.ToString("0.0", CultureInfo.InvariantCulture) + " clashes/day");
             Console.WriteLine("Avg Age     : " + dashboard.AverageOpenAge.ToString("0.0", CultureInfo.InvariantCulture) + " days");
             Console.WriteLine("Forecast    : " + (dashboard.ForecastFinishDate.HasValue ? dashboard.ForecastFinishDate.Value.ToString("yyyy-MM-dd") : "No valid forecast yet"));

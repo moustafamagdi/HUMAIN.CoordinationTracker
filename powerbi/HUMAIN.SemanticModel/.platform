@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "HUMAIN Coordination Dashboard"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "8d7ba305-1ed7-4101-a67a-6a8d0cc40f44"
+  }
+}

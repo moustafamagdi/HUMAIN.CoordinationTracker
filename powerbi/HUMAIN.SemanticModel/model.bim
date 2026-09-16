@@ -1,0 +1,2292 @@
+{
+  "compatibilityLevel": 1606,
+  "model": {
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"SourceFolder\",\"DashboardKPI\",\"DailyProgress\",\"TestPerformance\",\"CurrentClashes\",\"ClashLifecycle\",\"ClashHistory\",\"Tests\",\"Snapshots\",\"Metrics\",\"OperationalProgress\",\"ReportingPeriod\",\"PeriodDates\",\"SnapshotQuality\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"DevMode\"]"
+      }
+    ],
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "expressions": [
+      {
+        "name": "SourceFolder",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ],
+        "expression": "\"C:\\HUMAIN.CoordinationTracker\\PowerBI\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "kind": "m",
+        "lineageTag": "58df83f6-a155-4d66-864a-0fd8f775294f"
+      }
+    ],
+    "relationships": [
+      {
+        "name": "8508566c-c144-4a75-92dc-b8cac39885c6",
+        "fromColumn": "TestName",
+        "fromTable": "TestPerformance",
+        "toColumn": "TestName",
+        "toTable": "Tests"
+      },
+      {
+        "name": "b8855ad9-f252-45d0-bcbd-3edf58325b7a",
+        "fromColumn": "TestName",
+        "fromTable": "CurrentClashes",
+        "toColumn": "TestName",
+        "toTable": "Tests"
+      },
+      {
+        "name": "4f226900-2fc5-4d38-add1-5df5e9c5e7e0",
+        "fromColumn": "TestName",
+        "fromTable": "ClashHistory",
+        "toColumn": "TestName",
+        "toTable": "Tests"
+      },
+      {
+        "name": "37afb94c-1cf1-403b-bf5b-52dd8ce4b17c",
+        "fromColumn": "TestName",
+        "fromTable": "ClashLifecycle",
+        "toColumn": "TestName",
+        "toTable": "Tests"
+      },
+      {
+        "name": "783901bc-5b21-468e-a8e6-569b937ab811",
+        "fromColumn": "SnapshotDateTime",
+        "fromTable": "TestPerformance",
+        "toColumn": "SnapshotDateTime",
+        "toTable": "Snapshots"
+      },
+      {
+        "name": "2a11a991-429e-4ccf-9889-e6383df64de5",
+        "fromColumn": "SnapshotDateTime",
+        "fromTable": "CurrentClashes",
+        "toColumn": "SnapshotDateTime",
+        "toTable": "Snapshots"
+      },
+      {
+        "name": "8bd1ab9d-d7b8-4bd4-be7f-60d2ea07df70",
+        "fromColumn": "SnapshotDateTime",
+        "fromTable": "ClashHistory",
+        "toColumn": "SnapshotDateTime",
+        "toTable": "Snapshots"
+      },
+      {
+        "name": "0bfdfb7e-211c-45bf-b697-fc62896c4cd7",
+        "fromColumn": "TestName",
+        "fromTable": "OperationalProgress",
+        "toColumn": "TestName",
+        "toTable": "Tests"
+      },
+      {
+        "name": "9efc9df8-750e-41a6-9d12-97e7b98f0a05",
+        "fromColumn": "SnapshotDateTime",
+        "fromTable": "OperationalProgress",
+        "toColumn": "SnapshotDateTime",
+        "toTable": "Snapshots"
+      },
+      {
+        "name": "93c40ac0-9ff3-41a1-bc3f-ef15d2f859f5",
+        "fromColumn": "TestName",
+        "fromTable": "SnapshotQuality",
+        "toColumn": "TestName",
+        "toTable": "Tests"
+      },
+      {
+        "name": "f52a4a21-4a13-464a-942b-fdb0d6367597",
+        "fromColumn": "SnapshotDateTime",
+        "fromTable": "SnapshotQuality",
+        "toColumn": "SnapshotDateTime",
+        "toTable": "Snapshots"
+      }
+    ],
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "DashboardKPI",
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "10da81fc-6131-446c-9bc7-b0acccd5f275",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "4b17eb49-f899-459d-a0b5-f8228e1e5a5b",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "OpenClashes",
+            "dataType": "int64",
+            "lineageTag": "ac3db4e5-1057-4a90-8cb0-234102db2453",
+            "sourceColumn": "OpenClashes",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "New",
+            "dataType": "int64",
+            "lineageTag": "d8f9ebcc-bad7-4e71-9968-e072ca1c61c1",
+            "sourceColumn": "New",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Reopened",
+            "dataType": "int64",
+            "lineageTag": "c5f6b613-3feb-4e1b-85ea-435c6ffca825",
+            "sourceColumn": "Reopened",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Resolved",
+            "dataType": "int64",
+            "lineageTag": "0b254b1c-a768-4b99-a277-975f2fcdd1e5",
+            "sourceColumn": "Resolved",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NetChange",
+            "dataType": "int64",
+            "lineageTag": "d0acde9d-e915-4120-bbc8-843aea00081f",
+            "sourceColumn": "NetChange",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NetBurn",
+            "dataType": "int64",
+            "lineageTag": "b59ddc27-bd44-447d-bc8c-ec968aca4033",
+            "sourceColumn": "NetBurn",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rolling7ResolvedPerDay",
+            "dataType": "double",
+            "lineageTag": "6e12fbd2-cc54-4399-b1aa-975d6a203772",
+            "sourceColumn": "Rolling7ResolvedPerDay",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rolling7NewPerDay",
+            "dataType": "double",
+            "lineageTag": "a5355150-0121-4476-b975-529ae8aa189b",
+            "sourceColumn": "Rolling7NewPerDay",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rolling7NetBurnPerDay",
+            "dataType": "double",
+            "lineageTag": "d58e3889-c985-49a9-a2fb-d17da9130a4d",
+            "sourceColumn": "Rolling7NetBurnPerDay",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ForecastDaysToZero",
+            "dataType": "int64",
+            "lineageTag": "55121b79-f83e-4d4f-9bfe-7af852e8e9ec",
+            "sourceColumn": "ForecastDaysToZero",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ForecastFinishDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "af2713de-b90a-423c-b144-fc3027546f4f",
+            "sourceColumn": "ForecastFinishDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AverageOpenAgeDays",
+            "dataType": "double",
+            "lineageTag": "8fb0ef32-f00e-4eb3-bf11-b6d629edce24",
+            "sourceColumn": "AverageOpenAgeDays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Stale14Plus",
+            "dataType": "int64",
+            "lineageTag": "b99fa2f9-d48b-414c-b76a-cddb6e4538f3",
+            "sourceColumn": "Stale14Plus",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "CriticalOpen",
+            "dataType": "int64",
+            "lineageTag": "f96b2487-e786-4eb2-92f3-f6d1381a6e6b",
+            "sourceColumn": "CriticalOpen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ClashTests",
+            "dataType": "int64",
+            "lineageTag": "1ba25311-cf98-417c-9693-61e8098fbb22",
+            "sourceColumn": "ClashTests",
+            "summarizeBy": "none"
+          }
+        ],
+        "isHidden": true,
+        "lineageTag": "be851cd7-a8b2-431e-9f69-1612b0d48698",
+        "partitions": [
+          {
+            "name": "DashboardKPI",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\DashboardKPI.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Nulls = Table.ReplaceValue(Headers,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Headers)),",
+                " Typed = Table.TransformColumnTypes(Nulls,{{\"SnapshotDateTime\", type datetime},{\"SnapshotDate\", type date},{\"OpenClashes\", Int64.Type},{\"New\", Int64.Type},{\"Reopened\", Int64.Type},{\"Resolved\", Int64.Type},{\"NetChange\", Int64.Type},{\"NetBurn\", Int64.Type},{\"Rolling7ResolvedPerDay\", type number},{\"Rolling7NewPerDay\", type number},{\"Rolling7NetBurnPerDay\", type number},{\"ForecastDaysToZero\", Int64.Type},{\"ForecastFinishDate\", type date},{\"AverageOpenAgeDays\", type number},{\"Stale14Plus\", Int64.Type},{\"CriticalOpen\", Int64.Type},{\"ClashTests\", Int64.Type}},\"en-US\")",
+                "in",
+                " Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DailyProgress",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "4e7cfa1d-5c16-41d8-b580-eff70387b6bf",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "925f755a-cac6-47b5-b28e-005d282b0a8b",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "IsBaseline",
+            "dataType": "string",
+            "lineageTag": "b638a1fa-fae8-474e-8e33-e94e075c55be",
+            "sourceColumn": "IsBaseline",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "IntervalDays",
+            "dataType": "double",
+            "lineageTag": "1c9ea722-ee16-456d-81be-c4c49e2274aa",
+            "sourceColumn": "IntervalDays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Previous",
+            "dataType": "int64",
+            "lineageTag": "34b4871f-3fd7-4086-8f13-ec9c66f73e1e",
+            "sourceColumn": "Previous",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Current",
+            "dataType": "int64",
+            "lineageTag": "504ec963-9480-4354-a938-3fbc1f9c711f",
+            "sourceColumn": "Current",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "New",
+            "dataType": "int64",
+            "lineageTag": "9d259c25-8d79-4992-9a67-c4c9b3d2bc13",
+            "sourceColumn": "New",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Reopened",
+            "dataType": "int64",
+            "lineageTag": "9f5c834c-53c2-4ee2-89f4-1cdf3ac56be8",
+            "sourceColumn": "Reopened",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Existing",
+            "dataType": "int64",
+            "lineageTag": "cbf47548-4233-4bb2-bc71-347ace335fba",
+            "sourceColumn": "Existing",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Resolved",
+            "dataType": "int64",
+            "lineageTag": "6da2d568-e794-45a2-a261-cbce75ff86b5",
+            "sourceColumn": "Resolved",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Inflow",
+            "dataType": "int64",
+            "lineageTag": "6ea13d0e-0e3a-40b5-99d0-73b2acc6303a",
+            "sourceColumn": "Inflow",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NetChange",
+            "dataType": "int64",
+            "lineageTag": "d8d36c2d-3cae-4ca2-a17c-cd5a72798b1e",
+            "sourceColumn": "NetChange",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NetBurn",
+            "dataType": "int64",
+            "lineageTag": "43d79321-4b61-4a85-af46-83131904e704",
+            "sourceColumn": "NetBurn",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ResolutionRatePct",
+            "dataType": "double",
+            "lineageTag": "0f469a82-e9b7-4b1a-941f-901213f99388",
+            "sourceColumn": "ResolutionRatePct",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rolling7ResolvedPerDay",
+            "dataType": "double",
+            "lineageTag": "de1a53e9-7133-4705-8d55-528b99144e10",
+            "sourceColumn": "Rolling7ResolvedPerDay",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rolling7NewPerDay",
+            "dataType": "double",
+            "lineageTag": "06b92c09-fbfd-4089-b7de-bee0e0821414",
+            "sourceColumn": "Rolling7NewPerDay",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Rolling7NetBurnPerDay",
+            "dataType": "double",
+            "lineageTag": "ed8836e4-ff1f-4269-b6a3-0e33942b376a",
+            "sourceColumn": "Rolling7NetBurnPerDay",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ForecastDaysToZero",
+            "dataType": "int64",
+            "lineageTag": "535c8a8c-4bc6-45f5-8a72-af14564ba0a2",
+            "sourceColumn": "ForecastDaysToZero",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ForecastFinishDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "d1f4e8b3-812f-476d-8933-430a9c33c810",
+            "sourceColumn": "ForecastFinishDate",
+            "summarizeBy": "none"
+          }
+        ],
+        "isHidden": true,
+        "lineageTag": "f039a35b-6cf8-44ed-b783-40d482cf1493",
+        "partitions": [
+          {
+            "name": "DailyProgress",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\DailyProgress.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Nulls = Table.ReplaceValue(Headers,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Headers)),",
+                " Typed = Table.TransformColumnTypes(Nulls,{{\"SnapshotDateTime\", type datetime},{\"SnapshotDate\", type date},{\"IsBaseline\", type text},{\"IntervalDays\", type number},{\"Previous\", Int64.Type},{\"Current\", Int64.Type},{\"New\", Int64.Type},{\"Reopened\", Int64.Type},{\"Existing\", Int64.Type},{\"Resolved\", Int64.Type},{\"Inflow\", Int64.Type},{\"NetChange\", Int64.Type},{\"NetBurn\", Int64.Type},{\"ResolutionRatePct\", type number},{\"Rolling7ResolvedPerDay\", type number},{\"Rolling7NewPerDay\", type number},{\"Rolling7NetBurnPerDay\", type number},{\"ForecastDaysToZero\", Int64.Type},{\"ForecastFinishDate\", type date}},\"en-US\")",
+                "in",
+                " Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "TestPerformance",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "b30603a6-19a7-45dd-85d1-67f42dea7555",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "57ee466c-ee80-4668-921e-74117d728e33",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "eaff9839-6add-4aab-b318-2b5a1c3078a4",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severity",
+            "dataType": "string",
+            "lineageTag": "11a51c61-7f29-4a14-9f3b-c240072b969f",
+            "sourceColumn": "Severity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineA",
+            "dataType": "string",
+            "lineageTag": "939b1643-d117-481c-a207-28837cc7b526",
+            "sourceColumn": "DisciplineA",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineB",
+            "dataType": "string",
+            "lineageTag": "d4d6debc-6ab3-464d-a0eb-703d5b293d1b",
+            "sourceColumn": "DisciplineB",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplinePair",
+            "dataType": "string",
+            "lineageTag": "efdea78d-a68b-4a9a-b0fc-ec763a70d70c",
+            "sourceColumn": "DisciplinePair",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Previous",
+            "dataType": "int64",
+            "lineageTag": "02f146db-2ce7-4f84-9a8e-81d4ac2389ea",
+            "sourceColumn": "Previous",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Current",
+            "dataType": "int64",
+            "lineageTag": "821b961e-cafa-43c0-8def-c8a7c2a69ffa",
+            "sourceColumn": "Current",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "New",
+            "dataType": "int64",
+            "lineageTag": "66bd8990-7f02-48e0-8de7-7e106db69e87",
+            "sourceColumn": "New",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Reopened",
+            "dataType": "int64",
+            "lineageTag": "704bdb13-28aa-4b93-a15f-9bf84e370548",
+            "sourceColumn": "Reopened",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Existing",
+            "dataType": "int64",
+            "lineageTag": "e776adc1-a14a-4de5-a212-b5ff0bcabbec",
+            "sourceColumn": "Existing",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Resolved",
+            "dataType": "int64",
+            "lineageTag": "51092bd3-1cf6-4f2f-8f68-ee88febb94aa",
+            "sourceColumn": "Resolved",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NetChange",
+            "dataType": "int64",
+            "lineageTag": "eb5d89db-e0ad-497f-875f-229532f905cf",
+            "sourceColumn": "NetChange",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ResolutionRatePct",
+            "dataType": "double",
+            "lineageTag": "cad3471b-81ad-4ba4-8f63-c025fe999a04",
+            "sourceColumn": "ResolutionRatePct",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "a3bd5dc4-230a-450d-b9ed-b38df6d723ff",
+        "partitions": [
+          {
+            "name": "TestPerformance",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\TestPerformance.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Nulls = Table.ReplaceValue(Headers,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Headers)),",
+                " Typed = Table.TransformColumnTypes(Nulls,{{\"SnapshotDateTime\", type datetime},{\"SnapshotDate\", type date},{\"TestName\", type text},{\"Severity\", type text},{\"DisciplineA\", type text},{\"DisciplineB\", type text},{\"DisciplinePair\", type text},{\"Previous\", Int64.Type},{\"Current\", Int64.Type},{\"New\", Int64.Type},{\"Reopened\", Int64.Type},{\"Existing\", Int64.Type},{\"Resolved\", Int64.Type},{\"NetChange\", Int64.Type},{\"ResolutionRatePct\", type number}},\"en-US\")",
+                "in",
+                " Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "CurrentClashes",
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "64019bb7-0a64-4826-ae3d-f2e580ea5db0",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "4adea291-e706-4cca-b4f0-981771e745c2",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "09689258-06b7-4003-aaa1-5daf1139572d",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ClashGuid",
+            "dataType": "string",
+            "lineageTag": "5c474cf3-0455-4845-bb01-8f4ecf28f103",
+            "sourceColumn": "ClashGuid",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TrackerState",
+            "dataType": "string",
+            "lineageTag": "6c4c77a3-c20e-44e8-bd91-5f57c739b464",
+            "sourceColumn": "TrackerState",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NavisworksStatus",
+            "dataType": "string",
+            "lineageTag": "ae2341d2-506a-4730-a566-e22d0ce068a5",
+            "sourceColumn": "NavisworksStatus",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Distance",
+            "dataType": "double",
+            "lineageTag": "12ee39b8-7fcc-4ca5-b0f5-a409ffaa7a9e",
+            "sourceColumn": "Distance",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DateFound",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "3b86a39b-c1bb-422e-9d92-39f12d15113d",
+            "sourceColumn": "DateFound",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "GridLocation",
+            "dataType": "string",
+            "lineageTag": "24fae124-db85-4578-a93c-144fdfeb70ad",
+            "sourceColumn": "GridLocation",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "X",
+            "dataType": "double",
+            "lineageTag": "3e033531-242b-4e45-8d01-4eb372da2f31",
+            "sourceColumn": "X",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Y",
+            "dataType": "double",
+            "lineageTag": "89020ba7-bed9-4d7a-acc8-a7b34e258b38",
+            "sourceColumn": "Y",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Z",
+            "dataType": "double",
+            "lineageTag": "50f34f26-d7a8-4af1-a9f7-eb8fa9f6286c",
+            "sourceColumn": "Z",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemAElementId",
+            "dataType": "string",
+            "lineageTag": "bea62987-ce6e-4b9d-bf43-a0ea83bd098d",
+            "sourceColumn": "ItemAElementId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemAName",
+            "dataType": "string",
+            "lineageTag": "b99486d1-1217-4b6e-95c7-40caae5f1b6f",
+            "sourceColumn": "ItemAName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemALayer",
+            "dataType": "string",
+            "lineageTag": "49d70e86-5f14-445b-b494-8cf9481e1c81",
+            "sourceColumn": "ItemALayer",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemAPath",
+            "dataType": "string",
+            "lineageTag": "b0ab3db9-7609-433b-9a37-a35688d531b8",
+            "sourceColumn": "ItemAPath",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBElementId",
+            "dataType": "string",
+            "lineageTag": "014ea2b1-7f76-43eb-85b6-b62e05f73c33",
+            "sourceColumn": "ItemBElementId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBName",
+            "dataType": "string",
+            "lineageTag": "647cee20-cc05-4c50-b3bc-1b27595bd637",
+            "sourceColumn": "ItemBName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBLayer",
+            "dataType": "string",
+            "lineageTag": "ec7a21bb-420a-4c8c-bd7a-7d857776e639",
+            "sourceColumn": "ItemBLayer",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBPath",
+            "dataType": "string",
+            "lineageTag": "03215814-3133-421e-b740-f88146af91d1",
+            "sourceColumn": "ItemBPath",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Description",
+            "dataType": "string",
+            "lineageTag": "fae870f6-c558-47ce-9136-9b132e4dad34",
+            "sourceColumn": "Description",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Comments",
+            "dataType": "string",
+            "lineageTag": "3421475d-b783-48a6-9bd7-9efd5d5077f8",
+            "sourceColumn": "Comments",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severity",
+            "dataType": "string",
+            "lineageTag": "6fee7606-bf9c-47e2-9eb8-c56f2bc51110",
+            "sourceColumn": "Severity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineA",
+            "dataType": "string",
+            "lineageTag": "e403fb09-7dc8-46d3-8e01-556e98f4b69f",
+            "sourceColumn": "DisciplineA",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineB",
+            "dataType": "string",
+            "lineageTag": "b4e509fa-1478-4fba-a0c5-ff2eca2624fe",
+            "sourceColumn": "DisciplineB",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplinePair",
+            "dataType": "string",
+            "lineageTag": "fa39dcac-bc74-42bf-947a-08c3ecb11d9d",
+            "sourceColumn": "DisciplinePair",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FirstSeen",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "c5925e40-a068-4b28-81ef-7e626ef76ab4",
+            "sourceColumn": "FirstSeen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AgeDays",
+            "dataType": "int64",
+            "lineageTag": "1f3a43d9-8a5d-45ac-93eb-955e7210159e",
+            "sourceColumn": "AgeDays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AgeBucket",
+            "dataType": "string",
+            "lineageTag": "7a551ba8-817c-4237-b870-484c8c6fc258",
+            "sourceColumn": "AgeBucket",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReopenCount",
+            "dataType": "int64",
+            "lineageTag": "8d9fa515-f9ea-4c9e-b8c5-8e681f3c3e32",
+            "sourceColumn": "ReopenCount",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "IsStale14Plus",
+            "dataType": "string",
+            "lineageTag": "21fb9dc9-4b80-4a33-927e-8205d97a195f",
+            "sourceColumn": "IsStale14Plus",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "CoordinationState",
+            "dataType": "string",
+            "lineageTag": "a7e833a0-353d-4b1b-a23f-4590b6581a26",
+            "sourceColumn": "CoordinationState",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "57a8848f-3e49-45e3-9400-4c5ab6d47635",
+        "partitions": [
+          {
+            "name": "CurrentClashes",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\CurrentClashes.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Nulls = Table.ReplaceValue(Headers,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Headers)),",
+                " Typed = Table.TransformColumnTypes(Nulls,{{\"SnapshotDateTime\", type datetime},{\"SnapshotDate\", type date},{\"TestName\", type text},{\"ClashGuid\", type text},{\"TrackerState\", type text},{\"NavisworksStatus\", type text},{\"Distance\", type number},{\"DateFound\", type datetime},{\"GridLocation\", type text},{\"X\", type number},{\"Y\", type number},{\"Z\", type number},{\"ItemAElementId\", type text},{\"ItemAName\", type text},{\"ItemALayer\", type text},{\"ItemAPath\", type text},{\"ItemBElementId\", type text},{\"ItemBName\", type text},{\"ItemBLayer\", type text},{\"ItemBPath\", type text},{\"Description\", type text},{\"Comments\", type text},{\"Severity\", type text},{\"DisciplineA\", type text},{\"DisciplineB\", type text},{\"DisciplinePair\", type text},{\"FirstSeen\", type datetime},{\"AgeDays\", Int64.Type},{\"AgeBucket\", type text},{\"ReopenCount\", Int64.Type},{\"IsStale14Plus\", type text}},\"en-US\")",
+                "in",
+                " Table.AddColumn(Typed, \"CoordinationState\", each let s = if [NavisworksStatus] = null then \"\" else Text.Lower(Text.Trim([NavisworksStatus])) in if s = \"resolved\" then \"Resolved\" else if s = \"approved\" then \"Approved\" else \"Actionable\", type text)"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "ClashLifecycle",
+        "columns": [
+          {
+            "name": "ClashGuid",
+            "dataType": "string",
+            "lineageTag": "ecea1839-18ce-4e0c-bf96-f52f496c2c87",
+            "sourceColumn": "ClashGuid",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "ae3cc707-1d0e-466b-8bb0-15bbaf4ac583",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severity",
+            "dataType": "string",
+            "lineageTag": "a0e10cbe-10d5-40a1-a353-eefbda91a662",
+            "sourceColumn": "Severity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineA",
+            "dataType": "string",
+            "lineageTag": "ede7e573-6ab9-4cca-b0a0-f62d72592023",
+            "sourceColumn": "DisciplineA",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineB",
+            "dataType": "string",
+            "lineageTag": "1f8eec11-760a-413b-b3bd-8555a7665e7b",
+            "sourceColumn": "DisciplineB",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplinePair",
+            "dataType": "string",
+            "lineageTag": "1c0b3ab2-4ffa-4f89-ba9e-5a786f52998d",
+            "sourceColumn": "DisciplinePair",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FirstSeen",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "2ac6beb9-b571-46a3-be27-9a708569aee7",
+            "sourceColumn": "FirstSeen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "LastSeen",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "1c4cce10-4b1a-4393-b99c-60f253760c71",
+            "sourceColumn": "LastSeen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "LastResolved",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "89448719-2a5e-46be-9c59-a7ed78391693",
+            "sourceColumn": "LastResolved",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "IsOpen",
+            "dataType": "string",
+            "lineageTag": "b890c0b1-d65a-4fe1-8ac6-68b939a2dbda",
+            "sourceColumn": "IsOpen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AgeDays",
+            "dataType": "int64",
+            "lineageTag": "f37294e1-e8ea-4055-a003-39a9a9c137a7",
+            "sourceColumn": "AgeDays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AgeBucket",
+            "dataType": "string",
+            "lineageTag": "7268d06d-2904-43d6-a11b-340cfde5ab65",
+            "sourceColumn": "AgeBucket",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReopenCount",
+            "dataType": "int64",
+            "lineageTag": "e4e42034-e5bc-4a5a-a0eb-084adfc2b8c4",
+            "sourceColumn": "ReopenCount",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ResolutionCount",
+            "dataType": "int64",
+            "lineageTag": "f12928b4-1405-464f-b295-b020e0f68da4",
+            "sourceColumn": "ResolutionCount",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "LastNavisworksStatus",
+            "dataType": "string",
+            "lineageTag": "01679625-8196-4124-8700-95b1343fb412",
+            "sourceColumn": "LastNavisworksStatus",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "LastDistance",
+            "dataType": "double",
+            "lineageTag": "ce7d32ba-994a-449a-8993-58c30a5932e5",
+            "sourceColumn": "LastDistance",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "49cfef9e-3dd8-4360-9900-1fd59718f52f",
+        "partitions": [
+          {
+            "name": "ClashLifecycle",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\ClashLifecycle.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Nulls = Table.ReplaceValue(Headers,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Headers)),",
+                " Typed = Table.TransformColumnTypes(Nulls,{{\"ClashGuid\", type text},{\"TestName\", type text},{\"Severity\", type text},{\"DisciplineA\", type text},{\"DisciplineB\", type text},{\"DisciplinePair\", type text},{\"FirstSeen\", type datetime},{\"LastSeen\", type datetime},{\"LastResolved\", type datetime},{\"IsOpen\", type text},{\"AgeDays\", Int64.Type},{\"AgeBucket\", type text},{\"ReopenCount\", Int64.Type},{\"ResolutionCount\", Int64.Type},{\"LastNavisworksStatus\", type text},{\"LastDistance\", type number}},\"en-US\")",
+                "in",
+                " Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "ClashHistory",
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "df33337f-11fe-4275-939e-bc97ea214aa6",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "72b961d5-0000-402c-84c6-c0ab79426da2",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "9a777672-212c-430a-9bc8-faa2695b6d39",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ClashGuid",
+            "dataType": "string",
+            "lineageTag": "d01cdd66-8b7d-49a1-b869-56275a7000e2",
+            "sourceColumn": "ClashGuid",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TrackerState",
+            "dataType": "string",
+            "lineageTag": "d426a610-0595-4ff5-871a-5b96fd94456e",
+            "sourceColumn": "TrackerState",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "NavisworksStatus",
+            "dataType": "string",
+            "lineageTag": "15d02c2f-f624-4ec9-842c-ddd6b2cea1e0",
+            "sourceColumn": "NavisworksStatus",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Distance",
+            "dataType": "double",
+            "lineageTag": "52f93317-2210-417a-b524-1715c386aafe",
+            "sourceColumn": "Distance",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DateFound",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "420c2aad-1708-4b42-b6e1-0886e063be6f",
+            "sourceColumn": "DateFound",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "GridLocation",
+            "dataType": "string",
+            "lineageTag": "cc71f04c-52a9-4da0-9472-84063134544f",
+            "sourceColumn": "GridLocation",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "X",
+            "dataType": "double",
+            "lineageTag": "843e4e57-d26b-4794-9180-ed32f535d13a",
+            "sourceColumn": "X",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Y",
+            "dataType": "double",
+            "lineageTag": "c732f0da-4489-4fbe-bfe2-3a0ad06e4b8d",
+            "sourceColumn": "Y",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Z",
+            "dataType": "double",
+            "lineageTag": "b6066e4c-d16a-4263-a51b-76a1b678205a",
+            "sourceColumn": "Z",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemAElementId",
+            "dataType": "string",
+            "lineageTag": "fda2daa4-8b1b-4c40-8a45-1593e57a4639",
+            "sourceColumn": "ItemAElementId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemAName",
+            "dataType": "string",
+            "lineageTag": "c252fe6c-4c02-4e4e-9a71-353ad9ed34d0",
+            "sourceColumn": "ItemAName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemALayer",
+            "dataType": "string",
+            "lineageTag": "2dcb56a9-d585-452a-8991-252ec87d3abc",
+            "sourceColumn": "ItemALayer",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemAPath",
+            "dataType": "string",
+            "lineageTag": "0eb60011-54ca-42ff-a754-1e6d5c25f693",
+            "sourceColumn": "ItemAPath",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBElementId",
+            "dataType": "string",
+            "lineageTag": "eb407bd0-16ee-4c3a-9dab-3045ee12003e",
+            "sourceColumn": "ItemBElementId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBName",
+            "dataType": "string",
+            "lineageTag": "fc9bc766-876c-4845-9387-72914046ac35",
+            "sourceColumn": "ItemBName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBLayer",
+            "dataType": "string",
+            "lineageTag": "8c1f00a6-1b13-49b1-b6af-18d18092838c",
+            "sourceColumn": "ItemBLayer",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ItemBPath",
+            "dataType": "string",
+            "lineageTag": "9d3e8a71-61b9-4fab-a13e-59ee3ba6f661",
+            "sourceColumn": "ItemBPath",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Description",
+            "dataType": "string",
+            "lineageTag": "a9f334c7-a631-41e5-8829-f66d9ab80963",
+            "sourceColumn": "Description",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Comments",
+            "dataType": "string",
+            "lineageTag": "02055562-e219-4955-a9d8-df32186201a3",
+            "sourceColumn": "Comments",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severity",
+            "dataType": "string",
+            "lineageTag": "a74389b0-8561-4749-83f5-e599b4ce1fdb",
+            "sourceColumn": "Severity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineA",
+            "dataType": "string",
+            "lineageTag": "19ea24ee-0f52-4cb7-aa13-e48ecb0ae4e1",
+            "sourceColumn": "DisciplineA",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineB",
+            "dataType": "string",
+            "lineageTag": "61ea895a-36b4-42f9-be33-916093052aec",
+            "sourceColumn": "DisciplineB",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplinePair",
+            "dataType": "string",
+            "lineageTag": "c4cfd989-8b7f-4389-9692-291608c6b685",
+            "sourceColumn": "DisciplinePair",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FirstSeen",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "6f4932f2-b216-4f56-97f3-073db6467094",
+            "sourceColumn": "FirstSeen",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AgeDays",
+            "dataType": "int64",
+            "lineageTag": "f587d0fe-eb5a-46f0-9053-5348fa115964",
+            "sourceColumn": "AgeDays",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "AgeBucket",
+            "dataType": "string",
+            "lineageTag": "712b127a-5070-432a-ac8e-a6eaca2ca4a6",
+            "sourceColumn": "AgeBucket",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ReopenCount",
+            "dataType": "int64",
+            "lineageTag": "fe02f405-fab4-44a8-9b0c-e8e48433812d",
+            "sourceColumn": "ReopenCount",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "1179ee8c-c658-4e16-baab-5e43f25bb5a6",
+        "partitions": [
+          {
+            "name": "ClashHistory",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\ClashHistory.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Nulls = Table.ReplaceValue(Headers,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Headers)),",
+                " Typed = Table.TransformColumnTypes(Nulls,{{\"SnapshotDateTime\", type datetime},{\"SnapshotDate\", type date},{\"TestName\", type text},{\"ClashGuid\", type text},{\"TrackerState\", type text},{\"NavisworksStatus\", type text},{\"Distance\", type number},{\"DateFound\", type datetime},{\"GridLocation\", type text},{\"X\", type number},{\"Y\", type number},{\"Z\", type number},{\"ItemAElementId\", type text},{\"ItemAName\", type text},{\"ItemALayer\", type text},{\"ItemAPath\", type text},{\"ItemBElementId\", type text},{\"ItemBName\", type text},{\"ItemBLayer\", type text},{\"ItemBPath\", type text},{\"Description\", type text},{\"Comments\", type text},{\"Severity\", type text},{\"DisciplineA\", type text},{\"DisciplineB\", type text},{\"DisciplinePair\", type text},{\"FirstSeen\", type datetime},{\"AgeDays\", Int64.Type},{\"AgeBucket\", type text},{\"ReopenCount\", Int64.Type}},\"en-US\")",
+                "in",
+                " Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Tests",
+        "columns": [
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "fa2f2d1d-4265-40a1-993e-90bc35e9471c",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severity",
+            "dataType": "string",
+            "lineageTag": "2efa7ef9-5d5b-4dad-b991-245c72f78b7d",
+            "sourceColumn": "Severity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineA",
+            "dataType": "string",
+            "lineageTag": "8e0480e8-808b-4abe-807a-be25e5130c4f",
+            "sourceColumn": "DisciplineA",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineB",
+            "dataType": "string",
+            "lineageTag": "a8758538-a6b4-44fa-ad8c-e27e293921ac",
+            "sourceColumn": "DisciplineB",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplinePair",
+            "dataType": "string",
+            "lineageTag": "8f7770fc-a7a5-4bc5-a004-23e0370c8e33",
+            "sourceColumn": "DisciplinePair",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "d299fb1b-7f5a-4442-b6c8-ec2f9aff5a4d",
+        "partitions": [
+          {
+            "name": "Tests",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Table.SelectColumns(TestPerformance,{\"TestName\",\"Severity\",\"DisciplineA\",\"DisciplineB\",\"DisciplinePair\"}),",
+                " Unique = Table.Distinct(Source,{\"TestName\"})",
+                "in Unique"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Snapshots",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "9e543106-beb0-4e43-87bb-c81bcd703d49",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "2534378d-f61d-4a4c-b405-2fd789864ca0",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "IsBaseline",
+            "dataType": "string",
+            "lineageTag": "69b9675b-5e5d-4c55-b5dc-86d63e288376",
+            "sourceColumn": "IsBaseline",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "IntervalDays",
+            "dataType": "double",
+            "lineageTag": "a1ab8417-749b-41cb-a89a-bac179e72bd6",
+            "sourceColumn": "IntervalDays",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "0c524423-fcf4-4d4a-9402-44a77334896f",
+        "partitions": [
+          {
+            "name": "Snapshots",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Table.SelectColumns(DailyProgress,{\"SnapshotDateTime\",\"SnapshotDate\",\"IsBaseline\",\"IntervalDays\"}),",
+                " Unique = Table.Distinct(Source,{\"SnapshotDateTime\"})",
+                "in Unique"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Metrics",
+        "columns": [
+          {
+            "name": "Helper",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "3b816eb0-c3c4-4786-9587-9dd44a3af2bf",
+            "sourceColumn": "Helper"
+          }
+        ],
+        "lineageTag": "017470a1-67ac-4d03-93de-a71757f44dc8",
+        "measures": [
+          {
+            "name": "Selected Snapshot",
+            "displayFolder": "Executive Overview",
+            "expression": "VAR e = [Period End] RETURN CALCULATE(MAX(Snapshots[SnapshotDateTime]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]<e)",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "0192350b-2389-4507-a4a9-6fe3ee0a4bc1"
+          },
+          {
+            "name": "Open Clashes",
+            "displayFolder": "Coordination workflow",
+            "expression": "[Actionable Open]",
+            "formatString": "#,0",
+            "lineageTag": "c7ef25fd-541c-4832-8d50-994700ccd1da"
+          },
+          {
+            "name": "New",
+            "displayFolder": "Coordination workflow",
+            "expression": "[New Actionable]",
+            "formatString": "#,0",
+            "lineageTag": "d0e95070-4c93-4374-8288-f243a777d28e"
+          },
+          {
+            "name": "Resolved",
+            "displayFolder": "Coordination workflow",
+            "expression": "[Resolved All]",
+            "formatString": "#,0",
+            "lineageTag": "62e88a39-2b62-4a7c-a31c-302fa19918e1"
+          },
+          {
+            "name": "Reopened",
+            "displayFolder": "Coordination workflow",
+            "expression": "[Returned to Action]",
+            "formatString": "#,0",
+            "lineageTag": "cb5ad36c-8a5d-41d4-861f-0cfb425a4cf3"
+          },
+          {
+            "name": "Previous Clashes",
+            "displayFolder": "Coordination workflow",
+            "expression": "[Actionable Previous]",
+            "formatString": "#,0",
+            "lineageTag": "4e46d3da-6f4c-44ce-a95f-1d7fde6f3e7e"
+          },
+          {
+            "name": "Net Reduction",
+            "displayFolder": "Coordination workflow",
+            "expression": "[Net Actionable Reduction]",
+            "formatString": "#,0;-#,0;0",
+            "lineageTag": "235336e8-ab8b-4991-b89f-00b5e1e44ea7"
+          },
+          {
+            "name": "Resolution Rate",
+            "displayFolder": "Coordination workflow",
+            "expression": "DIVIDE([Actionable Resolved],[Actionable Previous]+[New Actionable]+[Returned to Action])",
+            "formatString": "0.00%",
+            "lineageTag": "2ef28e9f-a84e-44ca-8d1f-d06ab4142f56"
+          },
+          {
+            "name": "Open Trend",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = MAX(Snapshots[SnapshotDateTime]) RETURN IF(s>=[Period Start] && s<[Period End],SUM(OperationalProgress[Actionable]))",
+            "formatString": "#,0",
+            "lineageTag": "92f34255-558b-40ce-9fcd-f3839b3ed543"
+          },
+          {
+            "name": "New Inflow",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = MAX(Snapshots[SnapshotDateTime]) RETURN IF(s>=[Period Start] && s<[Period End],SUM(OperationalProgress[NewActionable])+SUM(OperationalProgress[ReturnedActionable]))",
+            "formatString": "#,0",
+            "lineageTag": "5eada400-7bdc-4461-8c1a-aa3e06043d28"
+          },
+          {
+            "name": "Resolved Trend",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = MAX(Snapshots[SnapshotDateTime]) RETURN IF(s>=[Period Start] && s<[Period End],SUM(OperationalProgress[ResolvedFromActionable]))",
+            "formatString": "#,0",
+            "lineageTag": "2e527003-fdd1-4383-b5ad-5543356554aa"
+          },
+          {
+            "name": "Net Trend",
+            "displayFolder": "Coordination workflow",
+            "expression": "SUM(OperationalProgress[NetActionableReduction])",
+            "formatString": "#,0",
+            "lineageTag": "746e9d2b-9db3-4d71-bfe2-66fed052d059"
+          },
+          {
+            "name": "Rolling Net Burn per Day",
+            "displayFolder": "Executive Overview",
+            "expression": [
+              "VAR s = [Selected Snapshot]",
+              "VAR elapsed = CALCULATE(SUM(Snapshots[IntervalDays]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] > s-7, Snapshots[SnapshotDateTime] <= s, Snapshots[IsBaseline] = \"No\")",
+              "VAR burn = CALCULATE([Net Trend], REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] > s-7, Snapshots[SnapshotDateTime] <= s, Snapshots[IsBaseline] = \"No\")",
+              "RETURN DIVIDE(burn,elapsed)"
+            ],
+            "formatString": "0.0",
+            "lineageTag": "016cf3af-319d-4e9f-a422-79fe761afebb"
+          },
+          {
+            "name": "Forecast Finish Date",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR rate = [Rolling Net Burn per Day] VAR s = [Selected Snapshot] RETURN IF(NOT ISBLANK(s) && [Recent Quality Flags]=0,IF([Actionable Open]=0,INT(s),IF([Forecast Data Days]>=3 && rate>0,INT(s)+ROUNDUP(DIVIDE([Actionable Open],rate),0))))",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "a8b52bab-ab11-4154-85ab-b23e6353f7d6"
+          },
+          {
+            "name": "Forecast Display",
+            "displayFolder": "Coordination workflow",
+            "expression": "SWITCH(TRUE(),ISBLANK([Selected Snapshot]),\"No snapshot\",[Recent Quality Flags]>0,\"Review data\",[Actionable Open]=0,\"No work remaining\",[Forecast Data Days]<3,\"Need 3 days\",ISBLANK([Forecast Finish Date]),\"No net burn\",FORMAT([Forecast Finish Date],\"dd MMM yyyy\"))",
+            "lineageTag": "fd6b2e4c-dfb1-4d51-92d5-05c0edbaf69f"
+          },
+          {
+            "name": "Top Test Open",
+            "displayFolder": "Executive Overview",
+            "expression": "VAR topTests = TOPN(10, ALLSELECTED(Tests[TestName]), [Open Clashes], DESC, Tests[TestName], ASC) RETURN IF(CONTAINS(topTests,Tests[TestName],SELECTEDVALUE(Tests[TestName])),[Open Clashes])",
+            "formatString": "#,0",
+            "lineageTag": "286a4abc-53a5-44e2-866e-a31a1374ceba"
+          },
+          {
+            "name": "Snapshot Label",
+            "displayFolder": "Executive Overview",
+            "expression": "IF(ISBLANK([Selected Snapshot]),\"NO SNAPSHOT BEFORE PERIOD END\",\"STOCK AS OF  \" & FORMAT([Selected Snapshot],\"dd MMM yyyy | HH:mm\"))",
+            "lineageTag": "e831895a-6bbb-4c03-9d15-9d8ac89aa986"
+          },
+          {
+            "name": "Net Reduction Color",
+            "displayFolder": "Executive Overview",
+            "expression": "IF([Net Reduction] < 0, \"#EF7181\", \"#42D3BC\")",
+            "lineageTag": "1b49a8eb-0884-4a19-83d0-5f03b76220bb"
+          },
+          {
+            "name": "Tests in Scope",
+            "displayFolder": "Test Performance",
+            "expression": "VAR s = [Selected Snapshot] RETURN CALCULATE(DISTINCTCOUNT(TestPerformance[TestName]), KEEPFILTERS(Snapshots[SnapshotDateTime] = s))",
+            "formatString": "#,0",
+            "lineageTag": "02406461-f0ed-4f64-8f35-735da615378a"
+          },
+          {
+            "name": "Tests Improving",
+            "displayFolder": "Test Performance",
+            "expression": "COALESCE(COUNTROWS(FILTER(VALUES(Tests[TestName]), [Net Reduction] > 0)),0)",
+            "formatString": "#,0",
+            "lineageTag": "b7f74ee5-2144-4760-89c5-6bf0ebbc3be0"
+          },
+          {
+            "name": "Tests Increasing",
+            "displayFolder": "Test Performance",
+            "expression": "COALESCE(COUNTROWS(FILTER(VALUES(Tests[TestName]), [Net Reduction] < 0)),0)",
+            "formatString": "#,0",
+            "lineageTag": "d725e16f-e36c-492c-bfcd-3f66d17e3ad3"
+          },
+          {
+            "name": "Test Direction",
+            "displayFolder": "Test Performance",
+            "expression": "SWITCH(TRUE(), [Open Clashes] = 0 && [Previous Clashes] = 0, \"No open clashes\", [Net Reduction] > 0, \"Improving\", [Net Reduction] < 0, \"Increasing\", \"Unchanged\")",
+            "lineageTag": "0b4a6eb6-2bb4-4819-89c7-e1889f4f796d"
+          },
+          {
+            "name": "Selected Test Caption",
+            "displayFolder": "Test Performance",
+            "expression": "IF(HASONEVALUE(Tests[TestName]), SELECTEDVALUE(Tests[TestName]), \"ALL SELECTED TESTS\")",
+            "lineageTag": "2fadef65-0c8c-4c11-91fa-f831ff505cb3"
+          },
+          {
+            "name": "Current Open Count",
+            "displayFolder": "Coordination workflow",
+            "expression": "COALESCE(CALCULATE(COUNTROWS(CurrentClashes),KEEPFILTERS(CurrentClashes[CoordinationState]=\"Actionable\")),0)",
+            "formatString": "#,0",
+            "lineageTag": "bac546e6-be3a-4d6c-88df-9a932988e942"
+          },
+          {
+            "name": "Current Critical",
+            "displayFolder": "Coordination workflow",
+            "expression": "COALESCE(CALCULATE([Current Open Count],KEEPFILTERS(CurrentClashes[Severity]=\"Critical\")),0)",
+            "formatString": "#,0",
+            "lineageTag": "d2b6e579-1552-4c4a-8cec-e1ec471dd5b1"
+          },
+          {
+            "name": "Open 14 Plus",
+            "displayFolder": "Coordination workflow",
+            "expression": "COALESCE(CALCULATE([Current Open Count],KEEPFILTERS(CurrentClashes[AgeDays]>=14)),0)",
+            "formatString": "#,0",
+            "lineageTag": "8e10c9f2-f95b-4112-b093-be61c87a9d17"
+          },
+          {
+            "name": "Critical 14 Plus",
+            "displayFolder": "Coordination workflow",
+            "expression": "COALESCE(CALCULATE([Current Critical],KEEPFILTERS(CurrentClashes[AgeDays]>=14)),0)",
+            "formatString": "#,0",
+            "lineageTag": "65a6002b-e976-4291-85bf-3feb5710dd27"
+          },
+          {
+            "name": "Average Age Days",
+            "displayFolder": "Coordination workflow",
+            "expression": "CALCULATE(AVERAGE(CurrentClashes[AgeDays]),KEEPFILTERS(CurrentClashes[CoordinationState]=\"Actionable\"))",
+            "formatString": "0.0",
+            "lineageTag": "784d9a34-b424-4f9f-99b5-0dedbccf614b"
+          },
+          {
+            "name": "Oldest Age Days",
+            "displayFolder": "Coordination workflow",
+            "expression": "CALCULATE(MAX(CurrentClashes[AgeDays]),KEEPFILTERS(CurrentClashes[CoordinationState]=\"Actionable\"))",
+            "formatString": "0",
+            "lineageTag": "c5c29766-babb-4e5b-a228-3f9ef30e9f85"
+          },
+          {
+            "name": "Current Snapshot Caption",
+            "displayFolder": "Coordination workflow",
+            "expression": "\"AS OF  \" & FORMAT(CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS()), \"dd MMM yyyy  |  HH:mm\")",
+            "lineageTag": "e5007b74-2f6a-4df0-b1ad-d79a7a9a9836"
+          },
+          {
+            "name": "Age Context",
+            "displayFolder": "Coordination workflow",
+            "expression": "\"Actionable only: Approved and Resolved excluded. Age at last snapshot; 14+ days is a review threshold.\"",
+            "lineageTag": "3611d29c-f84d-409e-9c96-93444a3ce804"
+          },
+          {
+            "name": "Critical Plot",
+            "displayFolder": "Clash Details",
+            "expression": "IF([Current Critical] > 0, [Current Critical])",
+            "formatString": "#,0",
+            "lineageTag": "42d6b03d-e7ba-4339-aadd-203e65ad61e6"
+          },
+          {
+            "name": "Detail Selection",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), SELECTEDVALUE(CurrentClashes[ClashGuid]), \"Select one clash row above to inspect its elements\")",
+            "lineageTag": "eedace26-7374-4350-9bfb-0ca914862435"
+          },
+          {
+            "name": "A Element ID",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemAElementId]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "5c255afd-af57-4e4a-8c2b-403084756e07"
+          },
+          {
+            "name": "A Name",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemAName]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "d865702a-3375-43e0-a6ff-329284c90038"
+          },
+          {
+            "name": "A Layer",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemALayer]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "ca99c102-6408-47a5-b3f2-f9a22ce56fb0"
+          },
+          {
+            "name": "A Model path",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemAPath]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "7f12a26a-c04a-4a03-969b-8732e2429b02"
+          },
+          {
+            "name": "B Element ID",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemBElementId]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "34f649b7-0c28-45b5-ab8e-a7b765dd0f79"
+          },
+          {
+            "name": "B Name",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemBName]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "75b64136-9646-4d55-b8fd-6a0e451ec2e4"
+          },
+          {
+            "name": "B Layer",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemBLayer]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "a08a6f5a-fb4f-4682-bb2d-2323d946e885"
+          },
+          {
+            "name": "B Model path",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[ItemBPath]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "0711d805-f221-4452-9f92-5c023378a1d5"
+          },
+          {
+            "name": "Selected Description",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[Description]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "efc1d321-a1f4-4a47-bc6a-50441d80fd0c"
+          },
+          {
+            "name": "Selected Comments",
+            "displayFolder": "Clash Details",
+            "expression": "IF(HASONEVALUE(CurrentClashes[TestName]) && HASONEVALUE(CurrentClashes[ClashGuid]), COALESCE(SELECTEDVALUE(CurrentClashes[Comments]), \"Not provided\"), \"Select one clash\")",
+            "lineageTag": "0813178e-eeee-4f19-b5ed-7fcce416c781"
+          },
+          {
+            "name": "Actionable Open",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = [Selected Snapshot] RETURN IF(NOT ISBLANK(s),COALESCE(CALCULATE(SUM(OperationalProgress[Actionable]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]=s),0))",
+            "formatString": "#,0",
+            "lineageTag": "c8053235-532a-4d82-ac44-78647e1eb3ed"
+          },
+          {
+            "name": "Total Current",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = [Selected Snapshot] RETURN IF(NOT ISBLANK(s),COALESCE(CALCULATE(SUM(OperationalProgress[TotalCurrent]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]=s),0))",
+            "formatString": "#,0",
+            "lineageTag": "f8c87f9f-200a-4625-9efe-caff600b8d73"
+          },
+          {
+            "name": "Approved Current",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = [Selected Snapshot] RETURN IF(NOT ISBLANK(s),COALESCE(CALCULATE(SUM(OperationalProgress[Approved]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]=s),0))",
+            "formatString": "#,0",
+            "lineageTag": "6f58fc00-4cb7-4721-86d4-80976c31bf10"
+          },
+          {
+            "name": "Reviewed Current",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = [Selected Snapshot] RETURN IF(NOT ISBLANK(s),COALESCE(CALCULATE(SUM(OperationalProgress[Reviewed]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]=s),0))",
+            "formatString": "#,0",
+            "lineageTag": "df5a0652-cf2d-48b5-b7bf-435866fc2018"
+          },
+          {
+            "name": "Resolved Retained",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = [Selected Snapshot] RETURN IF(NOT ISBLANK(s),COALESCE(CALCULATE(SUM(OperationalProgress[ResolvedPresent]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]=s),0))",
+            "formatString": "#,0",
+            "lineageTag": "b0d8e581-effe-4dd6-9e60-c873f074734d"
+          },
+          {
+            "name": "New Approvals",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[NewlyApproved]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "195467e8-1d4e-431c-b86d-8c14c2384138"
+          },
+          {
+            "name": "Approval Revoked",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[ApprovalRevoked]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "0d6bf28f-7633-4844-a056-2cb692a99279"
+          },
+          {
+            "name": "Resolved By Status",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[ResolvedByStatus]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "76f74676-277e-4c8b-85e8-7905bee783c9"
+          },
+          {
+            "name": "Resolved Disappeared",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[ResolvedByDisappearance]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "e3f70584-cd2a-486d-a709-dcbdd8851665"
+          },
+          {
+            "name": "Actionable Resolved",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[ResolvedFromActionable]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "eb319ab2-46d4-45b6-8c1f-5c14a9b0b22a"
+          },
+          {
+            "name": "Actionable Approved",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[ApprovedFromActionable]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "bf5f01a7-b41d-46c1-ba57-f8f02a289eba"
+          },
+          {
+            "name": "New Actionable",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[NewActionable]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "70c99ac9-23e9-407b-ae9d-0f34ac5686f7"
+          },
+          {
+            "name": "Returned to Action",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[ReturnedActionable]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "fbf3ccd8-feac-4560-a5b3-6a1119a6918f"
+          },
+          {
+            "name": "Actionable Previous",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] VAR prior = CALCULATE(MAX(Snapshots[SnapshotDateTime]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]<b) VAR first = CALCULATE(MIN(Snapshots[SnapshotDateTime]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]<e) VAR s = COALESCE(prior,first) RETURN IF(NOT ISBLANK(s),COALESCE(CALCULATE(SUM(OperationalProgress[Actionable]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]=s),0))",
+            "formatString": "#,0",
+            "lineageTag": "a7900e96-f345-4794-b638-73a569c3ef79"
+          },
+          {
+            "name": "Net Actionable Reduction",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[NetActionableReduction]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0;-#,0;0",
+            "lineageTag": "2bbc159f-9c84-42ae-8b4e-f11e11a7ce12"
+          },
+          {
+            "name": "Resolved All",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(OperationalProgress[Resolved]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,Snapshots[IsBaseline]=\"No\"),0)",
+            "formatString": "#,0",
+            "lineageTag": "8842d4f4-dbd8-41e3-8e34-893973a3cd05"
+          },
+          {
+            "name": "Closure Rate",
+            "displayFolder": "Coordination workflow",
+            "expression": "DIVIDE([Actionable Resolved]+[Actionable Approved],[Actionable Previous]+[New Actionable]+[Returned to Action])",
+            "formatString": "0.00%",
+            "lineageTag": "19393cf7-16e3-4dc5-b876-e862cbd12d71"
+          },
+          {
+            "name": "Approved Trend",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = MAX(Snapshots[SnapshotDateTime]) RETURN IF(s>=[Period Start] && s<[Period End],SUM(OperationalProgress[ApprovedFromActionable]))",
+            "formatString": "#,0",
+            "lineageTag": "270159fe-45f7-48a5-950f-dd9a0c3f52c7"
+          },
+          {
+            "name": "Forecast Data Days",
+            "displayFolder": "Coordination workflow",
+            "expression": "VAR s = [Selected Snapshot] RETURN CALCULATE(DISTINCTCOUNT(Snapshots[SnapshotDate]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] > s-7, Snapshots[SnapshotDateTime] <= s)",
+            "formatString": "#,0",
+            "lineageTag": "45022e5f-eb3e-4003-a2ea-b52ee4a15533"
+          },
+          {
+            "name": "Current Total Count",
+            "displayFolder": "Coordination workflow",
+            "expression": "COALESCE(COUNTROWS(CurrentClashes),0)",
+            "formatString": "#,0",
+            "lineageTag": "f65ff673-efc1-4f3d-8be9-fd0fd3d0226f"
+          },
+          {
+            "name": "Current Critical Total",
+            "displayFolder": "Coordination workflow",
+            "expression": "COALESCE(CALCULATE(COUNTROWS(CurrentClashes),KEEPFILTERS(CurrentClashes[Severity]=\"Critical\")),0)",
+            "formatString": "#,0",
+            "lineageTag": "17f72222-ac3b-435b-b065-320b3dc4567a"
+          },
+          {
+            "name": "Period Start",
+            "displayFolder": "Reporting period",
+            "expression": "VAR mode = SELECTEDVALUE(ReportingPeriod[Mode],\"All history\") RETURN SWITCH(mode,\"Today\",TODAY(),\"Last 7 days\",TODAY()-6,\"Custom period\",MIN(PeriodDates[Date]),CALCULATE(MIN(Snapshots[SnapshotDateTime]),REMOVEFILTERS(Snapshots)))",
+            "lineageTag": "12a296d0-cfc6-46b5-9a32-f6107409251e"
+          },
+          {
+            "name": "Period End",
+            "displayFolder": "Reporting period",
+            "expression": "VAR mode = SELECTEDVALUE(ReportingPeriod[Mode],\"All history\") RETURN SWITCH(mode,\"Today\",TODAY()+1,\"Last 7 days\",TODAY()+1,\"Custom period\",MAX(PeriodDates[Date])+1,INT(CALCULATE(MAX(Snapshots[SnapshotDateTime]),REMOVEFILTERS(Snapshots)))+1)",
+            "lineageTag": "3f3b8af0-fee9-4a98-8740-bc8e1348e337"
+          },
+          {
+            "name": "Period Snapshots",
+            "displayFolder": "Reporting period",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(COUNTROWS(Snapshots),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "lineageTag": "1f72f46b-5b3c-4a0f-b7c2-e694c21d6e80"
+          },
+          {
+            "name": "Period Caption",
+            "displayFolder": "Reporting period",
+            "expression": "SELECTEDVALUE(ReportingPeriod[Mode],\"All history\") & \" | \" & FORMAT([Period Start],\"dd MMM yyyy\") & \" - \" & FORMAT([Period End]-1,\"dd MMM yyyy\") & \" | Movements in period; stock at end\"",
+            "lineageTag": "9752989e-c1a4-4e0b-9dd4-df38e4bb1ff0"
+          },
+          {
+            "name": "Quality Flags",
+            "displayFolder": "Reporting period",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(SnapshotQuality[HasAlert]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "formatString": "#,0",
+            "lineageTag": "1d983076-29a1-4edb-9f55-88b1a694e774"
+          },
+          {
+            "name": "Missing Tests",
+            "displayFolder": "Reporting period",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(SnapshotQuality[TestMissing]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "formatString": "#,0",
+            "lineageTag": "866e4a87-1071-4107-9474-909d2815a010"
+          },
+          {
+            "name": "Added Tests",
+            "displayFolder": "Reporting period",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(SnapshotQuality[TestAdded]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "formatString": "#,0",
+            "lineageTag": "ccfceca8-08f2-4be4-a8e4-b86fdbf81c4a"
+          },
+          {
+            "name": "Large Drops",
+            "displayFolder": "Reporting period",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(SnapshotQuality[LargeDrop]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "formatString": "#,0",
+            "lineageTag": "a8a3f1b1-c5a6-4ce3-8ff0-dc2d734680b4"
+          },
+          {
+            "name": "Unknown Status Rows",
+            "displayFolder": "Reporting period",
+            "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(SUM(SnapshotQuality[UnknownStatuses]),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e),0)",
+            "formatString": "#,0",
+            "lineageTag": "d46473a9-c824-4d36-9409-f1b576b55a4a"
+          },
+          {
+            "name": "Quality Banner",
+            "displayFolder": "Reporting period",
+            "expression": "VAR flags = CALCULATE([Quality Flags],REMOVEFILTERS(Tests)) RETURN IF([Period Snapshots]=0,\"NO EXPORT IN PERIOD | Movement = 0; stock is last known. Check snapshot date.\",IF(flags>0,\"REVIEW DATA | \" & FORMAT(flags,\"0\") & \" test/snapshot alerts. See Snapshot Quality.\",\"QUALITY CHECK | No rule triggered; export completeness is not guaranteed.\"))",
+            "lineageTag": "1c688b80-3234-4001-8ae2-66ff5cecdfbd"
+          },
+          {
+            "name": "Quality Row Visible",
+            "displayFolder": "Reporting period",
+            "expression": "VAR s = SELECTEDVALUE(SnapshotQuality[SnapshotDateTime]) RETURN IF(s>=[Period Start] && s<[Period End] && SELECTEDVALUE(SnapshotQuality[HasAlert])=1,1)",
+            "lineageTag": "04441ada-6da8-47d8-b9d2-b9b93fdffa2e"
+          },
+          {
+            "name": "Recent Quality Flags",
+            "displayFolder": "Reporting period",
+            "expression": "VAR s = [Selected Snapshot] RETURN CALCULATE(SUM(SnapshotQuality[HasAlert]),REMOVEFILTERS(Snapshots),REMOVEFILTERS(Tests),Snapshots[SnapshotDateTime]>s-7,Snapshots[SnapshotDateTime]<=s)",
+            "lineageTag": "e5070ac6-5116-4900-9bb9-a3d0ec9124e4"
+          },
+          {
+            "name": "Net Reduction Color Light",
+            "displayFolder": "Presentation colors",
+            "expression": "IF([Net Reduction] < 0, \"#C33D55\", \"#087F75\")",
+            "lineageTag": "1e50ddc2-dec5-40dc-922c-64feecf5dff5"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Metrics",
+            "mode": "import",
+            "source": {
+              "expression": "#table(type table [Helper=Int64.Type], {{1}})",
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "OperationalProgress",
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "bca297c6-89cd-4966-b65b-147342296b1f",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "470aec9c-19e9-4a20-8bf6-2ebb350fa1bc",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "a9dfa9d5-eeac-4174-afae-00fc32901a2a",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Severity",
+            "dataType": "string",
+            "lineageTag": "bb1f6a50-5ef0-4878-983f-366422eb2eb6",
+            "sourceColumn": "Severity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineA",
+            "dataType": "string",
+            "lineageTag": "bccc4a9f-66f7-4c67-ab17-f380351f136f",
+            "sourceColumn": "DisciplineA",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplineB",
+            "dataType": "string",
+            "lineageTag": "fe578284-0097-4d44-a17b-3e654153126b",
+            "sourceColumn": "DisciplineB",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DisciplinePair",
+            "dataType": "string",
+            "lineageTag": "8b22cad6-dbba-4d6b-8329-d741973afcff",
+            "sourceColumn": "DisciplinePair",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TotalCurrent",
+            "dataType": "int64",
+            "lineageTag": "0946a9b3-d48a-4f78-bd44-1284f41d33fa",
+            "sourceColumn": "TotalCurrent",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Unresolved",
+            "dataType": "int64",
+            "lineageTag": "ec8c8e66-5bf0-4ec4-9b1d-1065c62f9fe9",
+            "sourceColumn": "Unresolved",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Actionable",
+            "dataType": "int64",
+            "lineageTag": "203ce8b2-adbe-4a57-99cf-cfe36be249f6",
+            "sourceColumn": "Actionable",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Approved",
+            "dataType": "int64",
+            "lineageTag": "af4382ca-88cc-42fc-aa1f-96e8ec292ab0",
+            "sourceColumn": "Approved",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Reviewed",
+            "dataType": "int64",
+            "lineageTag": "5b3c5547-aadd-4b33-9877-6be1149c9215",
+            "sourceColumn": "Reviewed",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ResolvedPresent",
+            "dataType": "int64",
+            "lineageTag": "8730f071-0157-41c9-9579-1cb92f93a8b7",
+            "sourceColumn": "ResolvedPresent",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "PreviousActionable",
+            "dataType": "int64",
+            "lineageTag": "4b726751-3fb4-4e51-841f-d8372c48b213",
+            "sourceColumn": "PreviousActionable",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "NewActionable",
+            "dataType": "int64",
+            "lineageTag": "7776df43-8ae9-4ca2-a625-5c26795c789d",
+            "sourceColumn": "NewActionable",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ReturnedActionable",
+            "dataType": "int64",
+            "lineageTag": "90d0381b-7cd9-40e9-b4ca-8a396805136d",
+            "sourceColumn": "ReturnedActionable",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ResolvedFromActionable",
+            "dataType": "int64",
+            "lineageTag": "1c56d60a-42fb-4fd6-8c36-fdfef189fee7",
+            "sourceColumn": "ResolvedFromActionable",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ApprovedFromActionable",
+            "dataType": "int64",
+            "lineageTag": "7ada8aac-612c-439c-ba7d-9d125acad27b",
+            "sourceColumn": "ApprovedFromActionable",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "NewlyApproved",
+            "dataType": "int64",
+            "lineageTag": "68cd7ec5-09b5-4efc-b15a-97c605c51764",
+            "sourceColumn": "NewlyApproved",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ApprovalRevoked",
+            "dataType": "int64",
+            "lineageTag": "c0c7b961-5c92-4356-8829-ea94814bce5f",
+            "sourceColumn": "ApprovalRevoked",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Resolved",
+            "dataType": "int64",
+            "lineageTag": "9598bfc9-5789-4b57-8209-853b01819883",
+            "sourceColumn": "Resolved",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ResolvedByStatus",
+            "dataType": "int64",
+            "lineageTag": "79a451cd-6092-4dea-82e3-89098fb177c7",
+            "sourceColumn": "ResolvedByStatus",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "ResolvedByDisappearance",
+            "dataType": "int64",
+            "lineageTag": "b54b6293-554b-440f-a4b5-bf701867492e",
+            "sourceColumn": "ResolvedByDisappearance",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "NetActionableReduction",
+            "dataType": "int64",
+            "lineageTag": "dedeebbf-017e-4589-bedc-3f8c978352d6",
+            "sourceColumn": "NetActionableReduction",
+            "summarizeBy": "sum"
+          }
+        ],
+        "lineageTag": "6629582b-b6e0-4ac4-ba8c-28a58387250e",
+        "partitions": [
+          {
+            "name": "OperationalProgress",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\OperationalProgress.csv\"), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                " Typed = Table.TransformColumnTypes(Headers,{{\"SnapshotDateTime\", type datetime},{\"SnapshotDate\", type date},{\"TestName\", type text},{\"Severity\", type text},{\"DisciplineA\", type text},{\"DisciplineB\", type text},{\"DisciplinePair\", type text},{\"TotalCurrent\", Int64.Type},{\"Unresolved\", Int64.Type},{\"Actionable\", Int64.Type},{\"Approved\", Int64.Type},{\"Reviewed\", Int64.Type},{\"ResolvedPresent\", Int64.Type},{\"PreviousActionable\", Int64.Type},{\"NewActionable\", Int64.Type},{\"ReturnedActionable\", Int64.Type},{\"ResolvedFromActionable\", Int64.Type},{\"ApprovedFromActionable\", Int64.Type},{\"NewlyApproved\", Int64.Type},{\"ApprovalRevoked\", Int64.Type},{\"Resolved\", Int64.Type},{\"ResolvedByStatus\", Int64.Type},{\"ResolvedByDisappearance\", Int64.Type},{\"NetActionableReduction\", Int64.Type}},\"en-US\")",
+                "in Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "ReportingPeriod",
+        "columns": [
+          {
+            "name": "Mode",
+            "dataType": "string",
+            "lineageTag": "f4e28a0c-2e54-475b-9d2d-bc75667b9617",
+            "sourceColumn": "Mode",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "9132bea3-f3a6-4adb-8b4c-89ffb1674782",
+        "partitions": [
+          {
+            "name": "ReportingPeriod",
+            "mode": "import",
+            "source": {
+              "expression": "#table(type table [Mode=text], {{\"All history\"},{\"Today\"},{\"Last 7 days\"},{\"Custom period\"}})",
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "PeriodDates",
+        "columns": [
+          {
+            "name": "Date",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "4fadce90-8be3-4514-ab56-8de2371c789e",
+            "sourceColumn": "Date",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "0ba7fb24-b284-4bd6-873d-3c960b395a3c",
+        "partitions": [
+          {
+            "name": "PeriodDates",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Start = Date.From(List.Min(Snapshots[SnapshotDateTime])),",
+                " Finish = List.Max({Date.From(List.Max(Snapshots[SnapshotDateTime])), Date.From(DateTime.LocalNow())}),",
+                " Dates = List.Dates(Start,Duration.Days(Finish-Start)+1,#duration(1,0,0,0))",
+                "in Table.FromColumns({Dates},type table [Date=date])"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "SnapshotQuality",
+        "columns": [
+          {
+            "name": "SnapshotDateTime",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy HH:mm",
+            "lineageTag": "b713f615-ed9f-42fd-8fd4-85ddb58c1e5a",
+            "sourceColumn": "SnapshotDateTime",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SnapshotDate",
+            "dataType": "dateTime",
+            "formatString": "dd MMM yyyy",
+            "lineageTag": "64f0948c-3d57-46f5-be57-bbef7dfa2e3c",
+            "sourceColumn": "SnapshotDate",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestName",
+            "dataType": "string",
+            "lineageTag": "20f63f90-7c37-487f-9ce5-582143b4ee88",
+            "sourceColumn": "TestName",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PresentInExport",
+            "dataType": "int64",
+            "lineageTag": "f15b2910-a1cd-4e67-9d03-0303b1534b4d",
+            "sourceColumn": "PresentInExport",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PreviousPresent",
+            "dataType": "int64",
+            "lineageTag": "9d4b056a-beb3-4a6e-a2d9-36e5435d38fc",
+            "sourceColumn": "PreviousPresent",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestMissing",
+            "dataType": "int64",
+            "lineageTag": "988a871b-9283-4d99-9286-98349ecd22b4",
+            "sourceColumn": "TestMissing",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TestAdded",
+            "dataType": "int64",
+            "lineageTag": "5f30b822-5bbe-4d55-bad1-5d8ffe64893c",
+            "sourceColumn": "TestAdded",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PreviousTotal",
+            "dataType": "int64",
+            "lineageTag": "186e39cc-7ebe-441d-8e44-523f5d5104b5",
+            "sourceColumn": "PreviousTotal",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "CurrentTotal",
+            "dataType": "int64",
+            "lineageTag": "b1305f51-7d43-4cb9-ac9f-7e7de8556003",
+            "sourceColumn": "CurrentTotal",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DropPct",
+            "dataType": "double",
+            "formatString": "0.0%",
+            "lineageTag": "ac09ba22-71a8-45dd-a644-a5ada78b030c",
+            "sourceColumn": "DropPct",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "LargeDrop",
+            "dataType": "int64",
+            "lineageTag": "585ec14b-8313-411b-afbb-1bff96fdb361",
+            "sourceColumn": "LargeDrop",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "UnknownStatuses",
+            "dataType": "int64",
+            "lineageTag": "d3386481-06f2-4c02-9dde-ae7b5ee355c0",
+            "sourceColumn": "UnknownStatuses",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Disappeared",
+            "dataType": "int64",
+            "lineageTag": "51e33c1f-97e0-4e14-bd51-f2d515facc6e",
+            "sourceColumn": "Disappeared",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "HasAlert",
+            "dataType": "int64",
+            "lineageTag": "078b53e8-adef-49ac-a8b2-e313e905420a",
+            "sourceColumn": "HasAlert",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Reason",
+            "dataType": "string",
+            "lineageTag": "333c7639-d669-4bda-abca-50c4ab737a09",
+            "sourceColumn": "Reason",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "8223890a-dd40-44db-8050-8f47fb5c1cb0",
+        "partitions": [
+          {
+            "name": "SnapshotQuality",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Csv.Document(File.Contents(SourceFolder & \"\\SnapshotQuality.csv\"),[Delimiter=\",\",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),",
+                " Headers = Table.PromoteHeaders(Source,[PromoteAllScalars=true]),",
+                " Typed = Table.TransformColumnTypes(Headers,{{\"SnapshotDateTime\",type datetime},{\"SnapshotDate\",type datetime},{\"TestName\",type text},{\"PresentInExport\",Int64.Type},{\"PreviousPresent\",Int64.Type},{\"TestMissing\",Int64.Type},{\"TestAdded\",Int64.Type},{\"PreviousTotal\",Int64.Type},{\"CurrentTotal\",Int64.Type},{\"DropPct\",type number},{\"LargeDrop\",Int64.Type},{\"UnknownStatuses\",Int64.Type},{\"Disappeared\",Int64.Type},{\"HasAlert\",Int64.Type},{\"Reason\",type text}},\"en-US\")",
+                "in Typed"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

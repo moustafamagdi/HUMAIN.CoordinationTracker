@@ -19,7 +19,41 @@ The tracker uses the Navisworks clash result GUID as the historical identity and
 - `Resolved`
 - `Reopened`
 
-Manual Navisworks workflow status is kept separately from the tracker state.
+Navisworks status is retained separately, but `Resolved` now closes a clash immediately, even when it is still present in the export. Disappearance also closes an unresolved GUID. A later Compact of an already resolved GUID adds **zero** further resolutions. A resolved GUID returning to an unresolved status is `Reopened`.
+
+`Approved` means accepted, not physically resolved. `Reviewed` remains actionable. Unknown statuses also remain actionable. Baseline closed/approved records are stocks rather than interval progress.
+
+## Operational dashboard (September 2026)
+
+`OperationalProgress.csv` is rebuilt for every test and snapshot alongside the original exports:
+
+- `TotalCurrent`: all rows physically present in the snapshot, including Approved and Resolved.
+- `Unresolved`: present rows excluding Resolved; includes Approved.
+- `Actionable`: present rows excluding both Approved and Resolved.
+- `Approved`, `Reviewed`, `ResolvedPresent`: current status stocks.
+- `ResolvedByStatus`, `ResolvedByDisappearance`: mutually exclusive routes into resolution during the interval.
+- `ResolvedFromActionable`, `ApprovedFromActionable`: mutually exclusive exits from actionable work.
+- `NewActionable`, `ReturnedActionable`: new work and work returning from a closed, accepted or previously absent state.
+- `NewlyApproved`: observed transitions to Approved (first seen already approved is not an observed approval event).
+- `ApprovalRevoked`: Approved to actionable; already included in ReturnedActionable, so do not add it again.
+
+Each non-baseline test/interval is checked against:
+
+`PreviousActionable + NewActionable + ReturnedActionable - ResolvedFromActionable - ApprovedFromActionable = Actionable`
+
+Approval followed by resolution contributes once to actionable reduction. Resolution still appears in the physical closure count. `CurrentClashes.csv` intentionally retains **all current records** for status auditing. Its name does not imply every row is actionable. `DailyProgress.Current`, `TestPerformance.Current` and legacy `DashboardKPI.OpenClashes` count unresolved including Approved; use OperationalProgress for actionable reporting. The legacy daily rolling forecast follows unresolved stock; the Power BI actionable forecast uses operational movement and requires at least three distinct snapshot dates within its recent window.
+
+Export the full, consistent test scope including status rows. The agreed disappearance rule cannot distinguish Compact from rows omitted by a filtered export. Rebuilding cannot recover statuses never exported. All available snapshots are rebuilt chronologically; original snapshot files are preserved.
+
+Non-interactive maintenance:
+
+```text
+HUMAIN.CoordinationTracker.exe --self-test
+HUMAIN.CoordinationTracker.exe --rebuild
+HUMAIN.CoordinationTracker.exe --rebuild --data-root C:\path\to\test-data
+```
+
+The self-test covers status transitions, repeated Resolved, later Compact, reopening, approvals, revocation, baseline and flow reconciliation. The project builds on .NET Framework 4.8 without external packages.
 
 ## Local storage
 
@@ -91,7 +125,7 @@ One row per unique clash GUID:
 - First Seen
 - Last Seen
 - Last Resolved
-- Open / Resolved
+- Open / Approved / Resolved
 - Age Days
 - Age Bucket
 - Reopen Count
@@ -101,7 +135,7 @@ One row per unique clash GUID:
 - Test / Severity / Discipline Pair
 
 ### CurrentClashes.csv
-Current open clashes enriched with:
+All physically present current clashes (including Approved and retained Resolved), enriched with:
 
 - Tracker State
 - First Seen
@@ -118,12 +152,16 @@ Current open clashes enriched with:
 ### ClashHistory.csv
 Snapshot-level historical detail for drill-through and auditing.
 
-## Recommended Power BI pages
+## Power BI dashboards and documentation
 
-1. **Executive Overview** — KPI cards, burndown, rolling burn rate, forecast.
-2. **Clash Tests** — test ranking, open/new/resolved trend, resolution rate.
-3. **Coordination Analysis** — severity, discipline pair, grid/location analysis.
-4. **Aging & Forecast** — age buckets, stale clashes, reopen behavior, finish forecast.
+The complete Dark and Light reports share one semantic model in [powerbi](powerbi/README.md). Pages: Executive Overview, Clash Test Performance, Critical & Aging, Clash Details, Resolution & Approvals, and Snapshot Quality.
+
+- [Arabic guide: every card, formula, interpretation and meeting workflow](docs/dashboard-guide.ar.md)
+- [Reporting periods and quality rules](docs/reporting-periods-and-quality.md)
+
+`SnapshotQuality.csv` records missing/added tests, large physical record drops (at least 100 and 30%), and unknown statuses. Alerts flag possible export issues without changing closure counts. The actionable forecast is suppressed when recent quality alerts exist.
+
+The self-test currently passes 204 workflow and 11 quality assertions. Local exports, snapshots, binaries and Power BI caches are not distributed. Configure SourceFolder before the first report refresh.
 
 ## Framework
 

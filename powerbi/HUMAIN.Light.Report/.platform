@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "HUMAIN Dashboard - Light"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "9cc176db-8f05-4368-a01f-86c87ae3f346"
+  }
+}

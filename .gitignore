@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Local Power BI state and project data
+**/.pbi/
+*.abf
+*.pbix
+*.pbit
+Snapshots/
+PowerBI/
+!powerbi/
