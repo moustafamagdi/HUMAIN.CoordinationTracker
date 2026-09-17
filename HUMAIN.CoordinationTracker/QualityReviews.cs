@@ -74,6 +74,17 @@ namespace HUMAIN.CoordinationTracker
             }).Where(x => x["HasAlert"] == "1").ToList();
         }
 
+        private static void SaveQualityBatch(Dictionary<string, QualityDecision> changes, string expected)
+        {
+            if (changes.Count == 0) return;
+            foreach (var item in changes)
+                if (string.IsNullOrWhiteSpace(item.Value.Reason) || string.IsNullOrWhiteSpace(item.Value.Reviewer) || !new[] { "Pending Review", "Accepted", "Needs Correction" }.Contains(item.Value.Status))
+                    throw new ArgumentException("Every changed review needs a decision, reason and reviewer.");
+            CommitChange("Quality review batch | " + changes.Count + " decisions", delegate {
+                foreach (var item in changes) SaveQualityDecision(item.Key, item.Value.Status, item.Value.Reason, item.Value.Reviewer);
+            }, expected);
+        }
+
         private sealed class QualityReviewForm : Form
         {
             private readonly DataGridView alerts = new DataGridView();
@@ -82,6 +93,9 @@ namespace HUMAIN.CoordinationTracker
             private readonly Button save = new Button();
             private readonly Label status = new Label();
             private string revision;
+            private readonly Dictionary<string, QualityDecision> drafts = new Dictionary<string, QualityDecision>();
+            private Dictionary<string, string> editing;
+            private bool loading;
             private bool busy;
             public QualityReviewForm()
             {
@@ -94,7 +108,7 @@ namespace HUMAIN.CoordinationTracker
                 alerts.Dock = DockStyle.Fill; alerts.ReadOnly = true; alerts.AllowUserToAddRows = false; alerts.MultiSelect = false;
                 alerts.SelectionMode = DataGridViewSelectionMode.FullRowSelect; alerts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; alerts.RowHeadersVisible = false;
                 foreach (var h in new[] { "Snapshot", "Test", "Review status", "Forecast blocker", "Reviewer" }) alerts.Columns.Add(h, h);
-                alerts.Columns[1].FillWeight = 200; layout.Controls.Add(alerts);
+                alerts.Columns.Add("Unsaved", "Unsaved"); alerts.Columns[1].FillWeight = 200; layout.Controls.Add(alerts);
                 details.Dock = DockStyle.Fill; details.Multiline = true; details.ReadOnly = true; details.ScrollBars = ScrollBars.Vertical; layout.Controls.Add(details);
                 var inputs = new FlowLayoutPanel { Dock = DockStyle.Fill };
                 inputs.Controls.Add(new Label { Text = "Decision:", AutoSize = true }); state.DropDownStyle = ComboBoxStyle.DropDownList; state.Width = 180;
@@ -103,9 +117,11 @@ namespace HUMAIN.CoordinationTracker
                 var reasonPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2 };
                 reasonPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130)); reasonPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
                 reasonPanel.Controls.Add(new Label { Text = "Reason (required):", AutoSize = true }); reason.Dock = DockStyle.Fill; reason.Multiline = true; reason.AccessibleName = "Quality review reason"; reasonPanel.Controls.Add(reason); layout.Controls.Add(reasonPanel);
-                save.Text = "Save review and rebuild"; save.Dock = DockStyle.Right; save.Width = 230; layout.Controls.Add(save); status.Dock = DockStyle.Fill; layout.Controls.Add(status);
+                save.Text = "Save all changes"; save.Dock = DockStyle.Right; save.Width = 230; layout.Controls.Add(save); status.Dock = DockStyle.Fill; layout.Controls.Add(status);
+                state.SelectedIndexChanged += delegate { UpdateDraft(); }; reason.TextChanged += delegate { UpdateDraft(); }; reviewer.TextChanged += delegate { UpdateDraft(); };
                 alerts.SelectionChanged += delegate { SelectAlert(); }; save.Click += delegate { Save(); };
-                FormClosing += (s, e) => { if (busy) e.Cancel = true; };
+                FormClosing += (s, e) => { if (busy) e.Cancel = true;
+                    else if (drafts.Count > 0 && MessageBox.Show(this, "Discard unsaved review changes?", "Unsaved changes", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) e.Cancel = true; };
                 Shown += delegate { LoadAlerts(); };
             }
             private void LoadAlerts()
@@ -114,39 +130,74 @@ namespace HUMAIN.CoordinationTracker
                 {
                     using (AcquireProjectLock())
                     {
-                        RecoverPending(); revision = SnapshotRevision(); alerts.Rows.Clear();
+                        RecoverPending(); revision = SnapshotRevision(); loading = true; editing = null; alerts.Rows.Clear();
                         foreach (var a in ReadQualityAlerts())
                         { int i = alerts.Rows.Add(a["SnapshotDateTime"], a["TestName"], a["ReviewStatus"], a["RequiresAction"] == "1" ? "Yes" : "No", a["ReviewedBy"]); alerts.Rows[i].Tag = a; }
                     }
-                    SelectAlert(); status.Text = alerts.Rows.Count + " original alerts. Review decisions do not change clash counts.";
+                    loading = false; SelectAlert(); UpdateSaveState();
                 }
                 catch (Exception ex) { MessageBox.Show(this, ex.Message, "Quality reviews"); save.Enabled = false; }
             }
             private Dictionary<string, string> Selected()
             { return alerts.SelectedRows.Count == 1 ? alerts.SelectedRows[0].Tag as Dictionary<string, string> : null; }
+            private void UpdateSaveState()
+            {
+                save.Enabled = !busy && drafts.Count > 0;
+                save.Text = drafts.Count == 0 ? "Save all changes" : "Save all changes (" + drafts.Count + ")";
+                status.Text = drafts.Count + " unsaved reviews. Edit each alert, then save once.";
+            }
+            private void UpdateDraft()
+            {
+                if (loading || busy || editing == null) return;
+                string id = editing["AlertId"];
+                var draft = new QualityDecision { Status = state.SelectedItem as string, Reason = reason.Text, Reviewer = reviewer.Text };
+                string originalReviewer = string.IsNullOrWhiteSpace(editing["ReviewedBy"]) ? Environment.UserName : editing["ReviewedBy"];
+                if (draft.Status == editing["ReviewStatus"] && draft.Reason == editing["ReviewReason"] && draft.Reviewer == originalReviewer) drafts.Remove(id);
+                else drafts[id] = draft;
+                foreach (DataGridViewRow row in alerts.Rows)
+                {
+                    var a = row.Tag as Dictionary<string,string>;
+                    if (a != null && a["AlertId"] == id) { row.Cells[2].Value = draft.Status; row.Cells[4].Value = draft.Reviewer; row.Cells[5].Value = drafts.ContainsKey(id) ? "Yes" : ""; }
+                }
+                UpdateSaveState();
+            }
             private void SelectAlert()
             {
-                var a = Selected(); save.Enabled = a != null && !busy; if (a == null) { details.Text = "Select an alert."; return; }
-                details.Text = a["Reason"] + "\r\nPrevious records: " + a["PreviousTotal"] + " | Current records: " + a["CurrentTotal"] +
-                    "\r\nLast review: " + a["ReviewedAt"] + "\r\nReason: " + a["ReviewReason"];
-                state.SelectedItem = a["ReviewStatus"]; reason.Text = a["ReviewReason"]; reviewer.Text = string.IsNullOrWhiteSpace(a["ReviewedBy"]) ? Environment.UserName : a["ReviewedBy"];
+                if (loading) return;
+                editing = Selected(); var a = editing; loading = true;
+                try
+                {
+                    if (a == null) { details.Text = "Select an alert."; return; }
+                    details.Text = a["Reason"] + "\r\nPrevious records: " + a["PreviousTotal"] + " | Current records: " + a["CurrentTotal"] +
+                        "\r\nLast saved review: " + a["ReviewedAt"] + "\r\nSaved reason: " + a["ReviewReason"];
+                    QualityDecision draft;
+                    if (drafts.TryGetValue(a["AlertId"], out draft)) { state.SelectedItem = draft.Status; reason.Text = draft.Reason; reviewer.Text = draft.Reviewer; }
+                    else { state.SelectedItem = a["ReviewStatus"]; reason.Text = a["ReviewReason"]; reviewer.Text = string.IsNullOrWhiteSpace(a["ReviewedBy"]) ? Environment.UserName : a["ReviewedBy"]; }
+                }
+                finally { loading = false; UpdateSaveState(); }
             }
             private async void Save()
             {
-                var a = Selected(); if (a == null || busy) return;
-                string decision = state.SelectedItem as string, note = reason.Text.Trim(), by = reviewer.Text.Trim();
-                if (note.Length == 0 || by.Length == 0) { MessageBox.Show(this, "Enter the reason and reviewer name.", "Quality reviews"); return; }
-                busy = true; alerts.Enabled = save.Enabled = state.Enabled = reason.Enabled = reviewer.Enabled = false; status.Text = "Saving review, backup and updated exports...";
+                if (busy || drafts.Count == 0) return;
+                var changes = drafts.ToDictionary(x => x.Key, x => new QualityDecision { Status = x.Value.Status, Reason = x.Value.Reason, Reviewer = x.Value.Reviewer });
+                var invalid = changes.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Value.Reason) || string.IsNullOrWhiteSpace(x.Value.Reviewer) || string.IsNullOrWhiteSpace(x.Value.Status));
+                if (invalid.Key != null)
+                {
+                    foreach (DataGridViewRow row in alerts.Rows) { var a = row.Tag as Dictionary<string,string>; if (a != null && a["AlertId"] == invalid.Key) { alerts.CurrentCell = row.Cells[0]; break; } }
+                    MessageBox.Show(this, "Every changed review needs a decision, reason and reviewer. Complete the selected review, then save again.", "Quality reviews"); return;
+                }
+                busy = true; alerts.Enabled = save.Enabled = state.Enabled = reason.Enabled = reviewer.Enabled = false; status.Text = "Saving all reviews and rebuilding once...";
+                bool saved = false;
                 try
                 {
-                    string id = a["AlertId"], expected = revision;
-                    await Task.Run(() => CommitChange("Quality review " + id + " | " + decision + " | " + by + " | " + note,
-                        () => SaveQualityDecision(id, decision, note, by), expected));
-                    LoadAlerts(); status.Text = "Saved. Refresh Power BI. Forecast still requires 3 dates and positive net burn.";
+                    string expected = revision;
+                    await Task.Run(() => SaveQualityBatch(changes, expected));
+                    drafts.Clear(); LoadAlerts(); saved = true;
                 }
-                catch (Exception ex) { MessageBox.Show(this, ex.Message, "Quality reviews"); LoadAlerts(); }
-                finally { busy = false; alerts.Enabled = state.Enabled = reason.Enabled = reviewer.Enabled = true; save.Enabled = Selected() != null; }
+                catch (Exception ex) { MessageBox.Show(this, ex.Message + "\r\nYour unsaved changes are kept in this window. If project data changed, reopen reviews and review the latest alerts.", "Quality reviews"); }
+                finally { busy = false; alerts.Enabled = state.Enabled = reason.Enabled = reviewer.Enabled = true; UpdateSaveState(); if (saved) status.Text = "All reviews saved. Refresh Power BI."; }
             }
+
         }
 
         private static void RunQualityReviewTests()
@@ -197,6 +248,22 @@ namespace HUMAIN.CoordinationTracker
                 try { CommitChange("review rollback", () => SaveQualityDecision(alert["AlertId"], "Needs Correction", "Failure test", "Tester")); } catch (IOException) { }
                 ManagementFault = null;
                 check(ReadQualityAlerts().Single()["RequiresAction"] == "0" && ReadQualityDecision(alert["AlertId"]).Status == "Accepted", "review and exports roll back together");
+                var batch = new Dictionary<string, QualityDecision> {
+                    { id, new QualityDecision { Status = "Accepted", Reason = "Batch first", Reviewer = "Tester" } },
+                    { alert["AlertId"], new QualityDecision { Status = "Needs Correction", Reason = "Batch second", Reviewer = "Tester" } }
+                };
+                int backups = Directory.GetDirectories(Path.Combine(AppRoot, "Backups")).Length;
+                SaveQualityBatch(batch, SnapshotRevision());
+                check(ReadQualityDecision(id).Reason == "Batch first" && ReadQualityDecision(alert["AlertId"]).Reason == "Batch second", "batch saves distinct decisions");
+                check(Directory.GetDirectories(Path.Combine(AppRoot, "Backups")).Length == backups + 1, "batch uses one backup and transaction");
+                batch[id].Reason = ""; string unchanged = SnapshotRevision();
+                try { SaveQualityBatch(batch, unchanged); check(false, "invalid batch must fail"); } catch (ArgumentException) { count++; }
+                check(unchanged == SnapshotRevision(), "invalid batch writes nothing");
+                batch[id].Reason = "Rollback first"; batch[alert["AlertId"]].Reason = "Rollback second";
+                ManagementFault = point => { if (point == "published-PowerBI") throw new IOException("batch failure"); };
+                try { SaveQualityBatch(batch, SnapshotRevision()); } catch (IOException) { }
+                ManagementFault = null;
+                check(ReadQualityDecision(id).Reason == "Batch first" && ReadQualityDecision(alert["AlertId"]).Reason == "Batch second", "batch rollback preserves both decisions");
                 Console.WriteLine("PASS: " + count + " quality review assertions.");
             }
             finally { ManagementFault = null; SetRoot(original); }
