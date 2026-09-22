@@ -1,0 +1,216 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 1135.9437737132434,
+            "y": 437.23329787084924
+          },
+          "nodeIndex": "Metrics",
+          "nodeLineageTag": "017470a1-67ac-4d03-93de-a71757f44dc8",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 667.427780185946,
+            "y": 72.99231404490456
+          },
+          "nodeIndex": "ClashHistory",
+          "nodeLineageTag": "1179ee8c-c658-4e16-baab-5e43f25bb5a6",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 901.94377371324344,
+            "y": 426.72466620720695
+          },
+          "nodeIndex": "ClashLifecycle",
+          "nodeLineageTag": "49cfef9e-3dd8-4360-9900-1fd59718f52f",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 171.09330836140748,
+            "y": 625.00645715137239
+          },
+          "nodeIndex": "CurrentClashes",
+          "nodeLineageTag": "57a8848f-3e49-45e3-9400-4c5ab6d47635",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1419.9437737132434,
+            "y": 437.23329787084924
+          },
+          "nodeIndex": "DailyProgress",
+          "nodeLineageTag": "f039a35b-6cf8-44ed-b783-40d482cf1493",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1703.9437737132434,
+            "y": 437.23329787084924
+          },
+          "nodeIndex": "DashboardKPI",
+          "nodeLineageTag": "be851cd7-a8b2-431e-9f69-1612b0d48698",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 167.97765448043867
+          },
+          "nodeIndex": "OperationalProgress",
+          "nodeLineageTag": "6629582b-b6e0-4ac4-ba8c-28a58387250e",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1987.9437737132434,
+            "y": 535.23329787084924
+          },
+          "nodeIndex": "PeriodDates",
+          "nodeLineageTag": "0ba7fb24-b284-4bd6-873d-3c960b395a3c",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2271.9437737132434,
+            "y": 535.23329787084924
+          },
+          "nodeIndex": "ReportingPeriod",
+          "nodeLineageTag": "9132bea3-f3a6-4adb-8b4c-89ffb1674782",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 380.97736026525854,
+            "y": -50
+          },
+          "nodeIndex": "SnapshotQuality",
+          "nodeLineageTag": "8223890a-dd40-44db-8050-8f47fb5c1cb0",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 336.45008844157428,
+            "y": 302.55564885337844
+          },
+          "nodeIndex": "Snapshots",
+          "nodeLineageTag": "0c524423-fcf4-4d4a-9402-44a77334896f",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 457.41615413556508,
+            "y": 824.46659574169848
+          },
+          "nodeIndex": "TestPerformance",
+          "nodeLineageTag": "a3bd5dc4-230a-450d-b9ed-b38df6d723ff",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 457.83041320450479,
+            "y": 530.05362196270153
+          },
+          "nodeIndex": "Tests",
+          "nodeLineageTag": "d299fb1b-7f5a-4442-b6c8-ec2f9aff5a4d",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2505.9437737132434,
+            "y": 511.23329787084924
+          },
+          "nodeIndex": "Objects",
+          "nodeLineageTag": "6ee8a2a5-cb1a-4a7c-b500-6dfe2ea47e74",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2739.9437737132434,
+            "y": 523.23329787084924
+          },
+          "nodeIndex": "SpeckleElements",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

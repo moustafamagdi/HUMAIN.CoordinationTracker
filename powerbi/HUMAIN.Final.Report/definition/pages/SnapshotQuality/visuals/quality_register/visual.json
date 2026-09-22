@@ -4,9 +4,9 @@
   "position": {
     "x": 24,
     "y": 542,
-    "width": 1552,
+    "z": 9000,
     "height": 393,
-    "z": 10000
+    "width": 1552
   },
   "visual": {
     "visualType": "tableEx",
@@ -524,7 +524,6 @@
     "filters": [
       {
         "name": "PeriodAlerts",
-        "type": "Advanced",
         "field": {
           "Measure": {
             "Expression": {
@@ -535,6 +534,7 @@
             "Property": "Quality Row Visible"
           }
         },
+        "type": "Advanced",
         "filter": {
           "Version": 2,
           "From": [

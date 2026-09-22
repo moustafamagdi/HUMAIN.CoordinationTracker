@@ -4,7 +4,7 @@
     "annotations": [
       {
         "name": "PBI_QueryOrder",
-        "value": "[\"SourceFolder\",\"DashboardKPI\",\"DailyProgress\",\"TestPerformance\",\"CurrentClashes\",\"ClashLifecycle\",\"ClashHistory\",\"Tests\",\"Snapshots\",\"Metrics\",\"OperationalProgress\",\"ReportingPeriod\",\"PeriodDates\",\"SnapshotQuality\"]"
+        "value": "[\"SourceFolder\",\"DashboardKPI\",\"DailyProgress\",\"TestPerformance\",\"CurrentClashes\",\"ClashLifecycle\",\"ClashHistory\",\"Tests\",\"Snapshots\",\"Metrics\",\"OperationalProgress\",\"ReportingPeriod\",\"PeriodDates\",\"SnapshotQuality\",\"Objects\",\"SpeckleElements\"]"
       },
       {
         "name": "__PBI_TimeIntelligenceEnabled",
@@ -33,6 +33,11 @@
         "expression": "\"C:\\HUMAIN.CoordinationTracker\\PowerBI\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
         "kind": "m",
         "lineageTag": "58df83f6-a155-4d66-864a-0fd8f775294f"
+      },
+      {
+        "name": "SpeckleModelUrl",
+        "kind": "m",
+        "expression": "\"https://app.speckle.systems/projects/YOUR_PROJECT_ID/models/YOUR_MODEL_ID\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
       }
     ],
     "relationships": [
@@ -112,6 +117,29 @@
         "fromTable": "SnapshotQuality",
         "toColumn": "SnapshotDateTime",
         "toTable": "Snapshots"
+      },
+      {
+        "name": "AutoDetected_d402d898-1a92-4269-b780-4e6aad30cf12",
+        "crossFilteringBehavior": "bothDirections",
+        "fromCardinality": "one",
+        "fromColumn": "Object Key",
+        "fromTable": "SpeckleElements",
+        "toColumn": "Object Key",
+        "toTable": "Objects"
+      },
+      {
+        "name": "3D-Clash3DSides-CurrentClashes",
+        "fromColumn": "ClashKey",
+        "fromTable": "Clash3DSides",
+        "toColumn": "3D Clash Key",
+        "toTable": "CurrentClashes"
+      },
+      {
+        "name": "3D-Clash3DGeometry-CurrentClashes",
+        "fromColumn": "ClashKey",
+        "fromTable": "Clash3DGeometry",
+        "toColumn": "3D Clash Key",
+        "toTable": "CurrentClashes"
       }
     ],
     "sourceQueryCulture": "en-US",
@@ -833,6 +861,50 @@
             "lineageTag": "a7e833a0-353d-4b1b-a23f-4590b6581a26",
             "sourceColumn": "CoordinationState",
             "summarizeBy": "none"
+          },
+          {
+            "name": "3D Clash Key",
+            "dataType": "string",
+            "expression": "CurrentClashes[TestName] & \"|\" & CurrentClashes[ClashGuid]",
+            "isHidden": true,
+            "lineageTag": "2a9101d3-a197-4ee6-9676-83f3ec3a1bb3",
+            "type": "calculated"
+          },
+          {
+            "name": "3D A Model Key",
+            "dataType": "string",
+            "expression": [
+              "VAR PathHierarchy = SUBSTITUTE(TRIM(CurrentClashes[ItemAPath] & \"\"), \" > \", \"|\")",
+              "VAR NodeCount = IF(PathHierarchy = \"\",0,PATHLENGTH(PathHierarchy))",
+              "VAR FileNodes = FILTER(ADDCOLUMNS(GENERATESERIES(1,NodeCount), \"NodeName\", TRIM(PATHITEM(PathHierarchy,[Value],TEXT))), RIGHT(LOWER([NodeName]),4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"})",
+              "VAR LastFile = MAXX(TOPN(1,FileNodes,[Value],DESC),[NodeName])",
+              "RETURN VAR RawName = LOWER(TRIM(LastFile & \"\"))",
+              "VAR Segments = SUBSTITUTE(SUBSTITUTE(RawName, \"\\\", \"|\"), \"/\", \"|\")",
+              "VAR FileName = IF(Segments = \"\", \"\", PATHITEM(Segments, PATHLENGTH(Segments), TEXT))",
+              "VAR Stem = IF(RIGHT(FileName,4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"}, LEFT(FileName, MAX(0,LEN(FileName)-4)), FileName)",
+              "RETURN IF(RIGHT(Stem,9) = \"_detached\", LEFT(Stem,MAX(0,LEN(Stem)-9)), Stem)"
+            ],
+            "isHidden": true,
+            "lineageTag": "7a56bee8-d7ad-4281-8796-229fcc99a28c",
+            "type": "calculated"
+          },
+          {
+            "name": "3D B Model Key",
+            "dataType": "string",
+            "expression": [
+              "VAR PathHierarchy = SUBSTITUTE(TRIM(CurrentClashes[ItemBPath] & \"\"), \" > \", \"|\")",
+              "VAR NodeCount = IF(PathHierarchy = \"\",0,PATHLENGTH(PathHierarchy))",
+              "VAR FileNodes = FILTER(ADDCOLUMNS(GENERATESERIES(1,NodeCount), \"NodeName\", TRIM(PATHITEM(PathHierarchy,[Value],TEXT))), RIGHT(LOWER([NodeName]),4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"})",
+              "VAR LastFile = MAXX(TOPN(1,FileNodes,[Value],DESC),[NodeName])",
+              "RETURN VAR RawName = LOWER(TRIM(LastFile & \"\"))",
+              "VAR Segments = SUBSTITUTE(SUBSTITUTE(RawName, \"\\\", \"|\"), \"/\", \"|\")",
+              "VAR FileName = IF(Segments = \"\", \"\", PATHITEM(Segments, PATHLENGTH(Segments), TEXT))",
+              "VAR Stem = IF(RIGHT(FileName,4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"}, LEFT(FileName, MAX(0,LEN(FileName)-4)), FileName)",
+              "RETURN IF(RIGHT(Stem,9) = \"_detached\", LEFT(Stem,MAX(0,LEN(Stem)-9)), Stem)"
+            ],
+            "isHidden": true,
+            "lineageTag": "1e2b76e5-e065-42ee-9e19-decd660005b9",
+            "type": "calculated"
           }
         ],
         "lineageTag": "57a8848f-3e49-45e3-9400-4c5ab6d47635",
@@ -1902,6 +1974,83 @@
             "name": "Quality Needs Correction",
             "expression": "VAR b = [Period Start] VAR e = [Period End] RETURN COALESCE(CALCULATE(COUNTROWS(SnapshotQuality),REMOVEFILTERS(Snapshots),Snapshots[SnapshotDateTime]>=b,Snapshots[SnapshotDateTime]<e,SnapshotQuality[HasAlert]=1,SnapshotQuality[ReviewStatus]=\"Needs Correction\"),0)",
             "lineageTag": "9218883d-0d7c-41dc-b58e-a8dadcbf700b"
+          },
+          {
+            "name": "3D Current Clashes",
+            "displayFolder": "3D Explorer",
+            "expression": "COUNTROWS(CurrentClashes)",
+            "formatString": "#,0",
+            "lineageTag": "0298767d-8a61-43ae-bf40-17e87ba83c8b"
+          },
+          {
+            "name": "3D Both Candidates",
+            "displayFolder": "3D Explorer",
+            "expression": "SUMX(VALUES(CurrentClashes[3D Clash Key]), IF(CALCULATE(COUNTROWS(Clash3DSides), Clash3DSides[CandidateCount] = 1) = 2, 1, 0))",
+            "formatString": "#,0",
+            "lineageTag": "cd032a5c-e475-4e98-86b4-a885d8031bac"
+          },
+          {
+            "name": "3D Needs Review",
+            "displayFolder": "3D Explorer",
+            "expression": "[3D Current Clashes] - [3D Both Candidates]",
+            "formatString": "#,0",
+            "lineageTag": "a9230556-274a-4654-b025-16107acb8daf"
+          },
+          {
+            "name": "3D Candidate Coverage",
+            "displayFolder": "3D Explorer",
+            "expression": "DIVIDE([3D Both Candidates], [3D Current Clashes])",
+            "formatString": "0.0%",
+            "lineageTag": "a63cea37-a8cd-4e88-8c3f-e6221d0e4ba3"
+          },
+          {
+            "name": "3D Selection Ready",
+            "displayFolder": "3D Explorer",
+            "expression": "IF(HASONEVALUE(CurrentClashes[3D Clash Key]), 1, 0)",
+            "formatString": "0",
+            "lineageTag": "76cfe5c6-4d35-480c-b1e4-b80bf19ff028"
+          },
+          {
+            "name": "3D Model Info",
+            "displayFolder": "3D Explorer",
+            "expression": "IF([3D Selection Ready] = 1, MAX(Clash3DGeometry[Model Info]))",
+            "lineageTag": "fe5185b9-5df6-4271-809e-75b23a53cdf0"
+          },
+          {
+            "name": "3D Match Summary",
+            "displayFolder": "3D Explorer",
+            "expression": "IF(ISEMPTY(CurrentClashes), BLANK(), VAR N = CALCULATE(COUNTROWS(Clash3DSides), Clash3DSides[CandidateCount] = 1) RETURN IF([3D Selection Ready] <> 1, \"Select one clash\", SWITCH(N, 2, \"Both elements matched by model + ID\", 1, \"One element matched only\", \"No matched elements\")))",
+            "lineageTag": "2e697d8a-aa8f-45dc-9ab5-7d12a0798684"
+          },
+          {
+            "name": "3D Selection Caption",
+            "displayFolder": "3D Explorer",
+            "expression": "IF([3D Selection Ready] = 1, [3D Match Summary] & \" | \" & SELECTEDVALUE(CurrentClashes[ClashGuid]), \"Select one clash in the register to load its matched elements in 3D.\")",
+            "lineageTag": "f898a0a4-9685-4346-a444-94997259fcb8"
+          },
+          {
+            "name": "3D A Match",
+            "displayFolder": "3D Explorer",
+            "expression": "IF([3D Selection Ready] = 1, CALCULATE(SELECTEDVALUE(Clash3DSides[MatchStatus]), Clash3DSides[Side] = \"A\"), \"Select one clash\")",
+            "lineageTag": "bcb006ea-9f5c-4268-bc41-661c89cf3707"
+          },
+          {
+            "name": "3D A Source",
+            "displayFolder": "3D Explorer",
+            "expression": "IF([3D Selection Ready] = 1, COALESCE(CALCULATE(SELECTEDVALUE(Clash3DGeometry[SourceFile]), Clash3DGeometry[Side] = \"A\"), \"No matched element\"), \"Select one clash\")",
+            "lineageTag": "b1d627d7-33d4-4a4c-b08b-d607994394f6"
+          },
+          {
+            "name": "3D B Match",
+            "displayFolder": "3D Explorer",
+            "expression": "IF([3D Selection Ready] = 1, CALCULATE(SELECTEDVALUE(Clash3DSides[MatchStatus]), Clash3DSides[Side] = \"B\"), \"Select one clash\")",
+            "lineageTag": "6d3d5bd2-0bff-4433-b17a-7fb6d52107fa"
+          },
+          {
+            "name": "3D B Source",
+            "displayFolder": "3D Explorer",
+            "expression": "IF([3D Selection Ready] = 1, COALESCE(CALCULATE(SELECTEDVALUE(Clash3DGeometry[SourceFile]), Clash3DGeometry[Side] = \"B\"), \"No matched element\"), \"Select one clash\")",
+            "lineageTag": "87a9d11f-51fe-4b96-970f-52862904a368"
           }
         ],
         "partitions": [
@@ -2341,6 +2490,418 @@
                 "in Typed"
               ],
               "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Objects",
+        "columns": [
+          {
+            "name": "Object Key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "ff241506-3089-4bed-a537-324a781a366c",
+            "sourceColumn": "Object Key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Application ID",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "c703958b-9e6c-443d-8d76-d615e3d25133",
+            "sourceColumn": "Application ID",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Model Info",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "7796ce06-6d70-419e-a05b-88727b01da0b",
+            "sourceColumn": "Model Info",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "6ee8a2a5-cb1a-4a7c-b500-6dfe2ea47e74",
+        "partitions": [
+          {
+            "name": "Objects",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "  Source = Speckle.GetTables(SpeckleModelUrl, [TableLayout = \"Simplified\"]),",
+                "  #\"Navigation 1\" = Source{[Key = \"objects\"]}[Data]",
+                "in",
+                "  #\"Navigation 1\""
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "SpeckleElements",
+        "annotations": [
+          {
+            "name": "PBI_NavigationStepName",
+            "value": "Navigation"
+          },
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "Object Key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "e5c283c6-917f-492f-8c4d-7effdb2961fc",
+            "sourceColumn": "Object Key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "name",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "12218747-0185-40b5-8b21-fcf213e7afa7",
+            "sourceColumn": "name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "properties.Element.Category",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "4cf48db1-9781-4744-8848-6367487349f9",
+            "sourceColumn": "properties.Element.Category",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "properties.Element.Id",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "da0c2575-362d-40cd-a097-80f1763c902b",
+            "sourceColumn": "properties.Element.Id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "properties.UniqueId",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "6cc77449-a68a-4b4d-8513-4f32eaf09528",
+            "sourceColumn": "properties.UniqueId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "properties.Source File",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "90c239d2-5486-4fe1-a857-bd602388313c",
+            "sourceColumn": "properties.Source File",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Model Key",
+            "dataType": "string",
+            "expression": [
+              "VAR RawName = LOWER(TRIM(SpeckleElements[properties.Source File] & \"\"))",
+              "VAR Segments = SUBSTITUTE(SUBSTITUTE(RawName, \"\\\", \"|\"), \"/\", \"|\")",
+              "VAR FileName = IF(Segments = \"\", \"\", PATHITEM(Segments, PATHLENGTH(Segments), TEXT))",
+              "VAR Stem = IF(RIGHT(FileName,4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"}, LEFT(FileName, MAX(0,LEN(FileName)-4)), FileName)",
+              "RETURN IF(RIGHT(Stem,9) = \"_detached\", LEFT(Stem,MAX(0,LEN(Stem)-9)), Stem)"
+            ],
+            "isHidden": true,
+            "lineageTag": "fd53da23-62ce-471d-b128-47adf33f57df",
+            "type": "calculated"
+          }
+        ],
+        "lineageTag": "8b2d4426-ad54-4606-8985-605411bb60bc",
+        "partitions": [
+          {
+            "name": "SpeckleElements",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                " Source = Speckle.GetTables(SpeckleModelUrl, [TableLayout = \"Simplified\"]),",
+                " Properties = Source{[Key=\"expand-properties\"]}[Data],",
+                " Selected = Properties({\"name\", \"properties.Element.Id\", \"properties.Source File\", \"properties.UniqueId\", \"properties.Element.Category\"}, true)",
+                "in",
+                " Selected"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "SpeckleMatchIndex",
+        "columns": [
+          {
+            "name": "ElementId",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "5e2f582f-344f-4b24-93db-9b61b84584d8",
+            "sourceColumn": "[ElementId]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "CandidateCount",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "lineageTag": "610f5bc3-a681-4366-b3be-d08182a37669",
+            "sourceColumn": "[CandidateCount]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "ModelKey",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "8da6f9df-70cf-4dd9-b0ab-51f3dec83a31",
+            "sourceColumn": "[ModelKey]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          }
+        ],
+        "isHidden": true,
+        "lineageTag": "cba863a8-fd6f-4b0e-9edc-50050a4beeb4",
+        "partitions": [
+          {
+            "name": "SpeckleMatchIndex",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "VAR Identities = DISTINCT(SELECTCOLUMNS(FILTER(SpeckleElements, NOT ISBLANK(SpeckleElements[properties.Element.Id]) && TRIM(SpeckleElements[properties.Element.Id] & \"\") <> \"\" && SpeckleElements[Model Key] <> \"\"), \"ModelKey\", SpeckleElements[Model Key] & \"\", \"ElementId\", TRIM(SpeckleElements[properties.Element.Id] & \"\"), \"Identity\", COALESCE(SpeckleElements[properties.Source File], \"\") & \"|\" & COALESCE(SpeckleElements[properties.UniqueId], \"OBJECT:\" & FORMAT(SpeckleElements[Object Key], \"0\"))))",
+                "RETURN GROUPBY(Identities, [ModelKey], [ElementId], \"CandidateCount\", COUNTX(CURRENTGROUP(), 1))"
+              ],
+              "type": "calculated"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Clash3DSides",
+        "columns": [
+          {
+            "name": "ClashKey",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "2491e53b-3eba-466b-be20-28e5136afaef",
+            "sourceColumn": "[ClashKey]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Side",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "ab7cff89-b88f-4a88-bca3-5eb1b9d0a056",
+            "sourceColumn": "[Side]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "ElementId",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "bcf9109c-8f4b-4bfc-b323-703f152739ed",
+            "sourceColumn": "[ElementId]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "ItemPath",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "098da21f-9ce2-4b99-82da-696636311086",
+            "sourceColumn": "[ItemPath]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "CandidateCount",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "lineageTag": "359cbd1f-d82b-40ae-b225-53f9a70441ec",
+            "sourceColumn": "[CandidateCount]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "MatchStatus",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "44c6d44c-f569-4f13-8275-e65b3f011d3b",
+            "sourceColumn": "[MatchStatus]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "ModelKey",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "b5152427-728b-4309-9d80-cdd627a14978",
+            "sourceColumn": "[ModelKey]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          }
+        ],
+        "lineageTag": "6413ed83-f3ce-470a-b4f3-355582d01a66",
+        "partitions": [
+          {
+            "name": "Clash3DSides",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "VAR Sides = UNION(",
+                "SELECTCOLUMNS(CurrentClashes,\"ClashKey\",CurrentClashes[3D Clash Key],\"Side\",\"A\",\"ModelKey\",CurrentClashes[3D A Model Key] & \"\",\"ElementId\",TRIM(CurrentClashes[ItemAElementId] & \"\"),\"ItemPath\",CurrentClashes[ItemAPath]),",
+                "SELECTCOLUMNS(CurrentClashes,\"ClashKey\",CurrentClashes[3D Clash Key],\"Side\",\"B\",\"ModelKey\",CurrentClashes[3D B Model Key] & \"\",\"ElementId\",TRIM(CurrentClashes[ItemBElementId] & \"\"),\"ItemPath\",CurrentClashes[ItemBPath]))",
+                "VAR Counts = SELECTCOLUMNS(SpeckleMatchIndex,\"ModelKey\",SpeckleMatchIndex[ModelKey] & \"\",\"ElementId\",SpeckleMatchIndex[ElementId] & \"\",\"CandidateCount\",SpeckleMatchIndex[CandidateCount])",
+                "RETURN ADDCOLUMNS(NATURALLEFTOUTERJOIN(Sides,Counts),\"MatchStatus\",SWITCH(TRUE(),[ElementId]=\"\",\"Missing element ID\",[ModelKey]=\"\",\"Missing source model\",ISBLANK([CandidateCount]),\"Model / ID not found\",[CandidateCount]>1,\"Ambiguous source identity - excluded\",\"Matched model + ID\"))"
+              ],
+              "type": "calculated"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Clash3DGeometry",
+        "columns": [
+          {
+            "name": "ClashKey",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "c2046a40-a80d-49e5-9a2b-74c1692987d5",
+            "sourceColumn": "[ClashKey]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Side",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "e3b2e4f1-60e4-41c7-8c37-3e26e15aab24",
+            "sourceColumn": "[Side]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "ElementId",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "38c2b5a7-4a1a-4c83-88df-33e0fee79a7b",
+            "sourceColumn": "[ElementId]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Object Key",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "lineageTag": "c475fd5b-d878-4663-81d2-d166b68505b0",
+            "sourceColumn": "[Object Key]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "SourceFile",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "3e3d6a22-f7e3-4a71-854e-81f20f3c9f0b",
+            "sourceColumn": "[SourceFile]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "UniqueId",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "5cdc9be7-1c40-49bf-aaca-0040d9cb6fde",
+            "sourceColumn": "[UniqueId]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "Model Info",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "9288f39c-d707-42f5-9579-b42a61944778",
+            "sourceColumn": "[Model Info]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          },
+          {
+            "name": "ModelKey",
+            "dataType": "string",
+            "isNameInferred": false,
+            "lineageTag": "ff7f38af-0cc9-4a2e-9224-865fa42a1d3f",
+            "sourceColumn": "[ModelKey]",
+            "summarizeBy": "none",
+            "type": "calculatedTableColumn"
+          }
+        ],
+        "lineageTag": "8d0dc21d-a991-4dfb-bdbe-d72884096d4f",
+        "partitions": [
+          {
+            "name": "Clash3DGeometry",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "VAR Sides = SELECTCOLUMNS(FILTER(Clash3DSides,Clash3DSides[CandidateCount]=1),\"ClashKey\",Clash3DSides[ClashKey],\"Side\",Clash3DSides[Side],\"ModelKey\",Clash3DSides[ModelKey] & \"\",\"ElementId\",Clash3DSides[ElementId] & \"\")",
+                "VAR Geometry = SELECTCOLUMNS(SpeckleElements,\"ModelKey\",SpeckleElements[Model Key] & \"\",\"ElementId\",TRIM(SpeckleElements[properties.Element.Id] & \"\"),\"Object Key\",SpeckleElements[Object Key],\"SourceFile\",SpeckleElements[properties.Source File],\"UniqueId\",SpeckleElements[properties.UniqueId],\"Model Info\",LOOKUPVALUE(Objects[Model Info],Objects[Object Key],SpeckleElements[Object Key]))",
+                "RETURN NATURALINNERJOIN(Sides,Geometry)"
+              ],
+              "type": "calculated"
             }
           }
         ]

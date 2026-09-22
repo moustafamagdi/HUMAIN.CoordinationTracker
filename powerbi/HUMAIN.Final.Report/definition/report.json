@@ -40,6 +40,17 @@
           "type": "BaseTheme"
         }
       ]
+    },
+    {
+      "name": "specklePowerBiVisual",
+      "type": "CustomVisual",
+      "items": [
+        {
+          "name": "specklePowerBiVisual.pbiviz.json",
+          "path": "specklePowerBiVisual.pbiviz.json",
+          "type": "CustomVisualMetadata"
+        }
+      ]
     }
   ],
   "settings": {

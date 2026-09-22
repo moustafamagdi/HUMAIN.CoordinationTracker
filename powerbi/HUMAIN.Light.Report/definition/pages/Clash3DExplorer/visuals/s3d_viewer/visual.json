@@ -1,0 +1,240 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "name": "s3d_viewer",
+  "position": {
+    "x": 550,
+    "y": 346,
+    "z": 14000,
+    "height": 413,
+    "width": 1026
+  },
+  "visual": {
+    "visualType": "specklePowerBiVisual",
+    "query": {
+      "queryState": {
+        "modelInfo": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Metrics"
+                    }
+                  },
+                  "Property": "3D Model Info"
+                }
+              },
+              "queryRef": "Metrics.3D Model Info",
+              "nativeQueryRef": "3D Model Info"
+            }
+          ]
+        },
+        "applicationIds": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Clash3DGeometry"
+                    }
+                  },
+                  "Property": "Object Key"
+                }
+              },
+              "queryRef": "Clash3DGeometry.Object Key",
+              "nativeQueryRef": "Object Key"
+            }
+          ]
+        },
+        "colorBy": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Clash3DGeometry"
+                    }
+                  },
+                  "Property": "Side"
+                }
+              },
+              "queryRef": "Clash3DGeometry.Side",
+              "nativeQueryRef": "Side"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "camera": [
+        {
+          "properties": {
+            "zoomOnFilter": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "isOrtho": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "color": [
+        {
+          "properties": {
+            "context": {
+              "expr": {
+                "Literal": {
+                  "Value": "'ghosted'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "viewMode": [
+        {
+          "properties": {
+            "navbarHidden": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "cameraPosition": [
+        {
+          "properties": {
+            "positionX": {
+              "expr": {
+                "Literal": {
+                  "Value": "'744034.2518914766'"
+                }
+              }
+            },
+            "positionY": {
+              "expr": {
+                "Literal": {
+                  "Value": "'2766298.19199237'"
+                }
+              }
+            },
+            "positionZ": {
+              "expr": {
+                "Literal": {
+                  "Value": "'1906.5754806799814'"
+                }
+              }
+            },
+            "targetX": {
+              "expr": {
+                "Literal": {
+                  "Value": "'744034.2518914767'"
+                }
+              }
+            },
+            "targetY": {
+              "expr": {
+                "Literal": {
+                  "Value": "'2766298.1933174045'"
+                }
+              }
+            },
+            "targetZ": {
+              "expr": {
+                "Literal": {
+                  "Value": "'581.5410894286847'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'3D VIEW | source model + element ID'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#172B46'"
+                    }
+                  }
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "12D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

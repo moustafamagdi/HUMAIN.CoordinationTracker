@@ -4,10 +4,10 @@
   "position": {
     "x": 24,
     "y": 791,
-    "z": 18000,
+    "z": 17000,
     "height": 260,
     "width": 1552,
-    "tabOrder": 17000
+    "tabOrder": 16000
   },
   "visual": {
     "visualType": "tableEx",
@@ -168,7 +168,7 @@
                     "Entity": "Metrics"
                   }
                 },
-                "Property": "Actionable Open"
+                "Property": "Actionable Approved"
               }
             },
             "direction": "Descending"

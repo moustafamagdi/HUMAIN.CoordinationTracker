@@ -1,6 +1,6 @@
 # Optional Speckle 3D model extension
 
-`source-aware-3d.json` contains the DAX definitions used by the local 3D Clash Explorer. It is a model-extension specification, not a PBIP file or automatic installer. The six-page base reports remain usable without the Speckle connector. Local working reports additionally contain an authenticated Speckle visual; account state and imported model caches are not distributed here.
+`source-aware-3d.json` contains the DAX definitions used by the local 3D Clash Explorer. The complete PBIP reports now include this extension. The specification remains a reference for the calculated tables and measures. The Speckle connector is required; account state and imported model caches are not distributed.
 
 ## Prerequisites and imported tables
 

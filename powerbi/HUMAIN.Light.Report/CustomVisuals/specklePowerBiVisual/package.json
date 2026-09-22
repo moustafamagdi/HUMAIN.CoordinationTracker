@@ -1,0 +1,29 @@
+{
+  "version": "2026.9.2",
+  "author": {
+    "name": "Speckle Systems",
+    "email": "info@speckle.systems"
+  },
+  "resources": [
+    {
+      "resourceId": "rId0",
+      "sourceType": 5,
+      "file": "resources/specklePowerBiVisual.pbiviz.json"
+    }
+  ],
+  "visual": {
+    "guid": "specklePowerBiVisual",
+    "name": "Speckle PowerBI Viewer",
+    "displayName": "Speckle PowerBI Viewer",
+    "version": "2026.9.2",
+    "description": "An interactive 3D viewer for Speckle Data",
+    "supportUrl": "https://speckle.community",
+    "gitHubUrl": "https://github.com/specklesystems/speckle-powerbi-visuals",
+    "visualClassName": "Visual"
+  },
+  "metadata": {
+    "pbivizjson": {
+      "resourceId": "rId0"
+    }
+  }
+}

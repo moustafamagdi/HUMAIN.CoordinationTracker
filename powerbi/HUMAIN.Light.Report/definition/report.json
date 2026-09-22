@@ -27,7 +27,8 @@
     ]
   },
   "publicCustomVisuals": [
-    "AutodeskDataConnectorforPowerBI71085f8edd3a426aabae3dc6cdb2f164"
+    "AutodeskDataConnectorforPowerBI71085f8edd3a426aabae3dc6cdb2f164",
+    "three_bi"
   ],
   "resourcePackages": [
     {
@@ -38,6 +39,17 @@
           "name": "CY24SU10",
           "path": "BaseThemes/CY24SU10.json",
           "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "specklePowerBiVisual",
+      "type": "CustomVisual",
+      "items": [
+        {
+          "name": "specklePowerBiVisual.pbiviz.json",
+          "path": "specklePowerBiVisual.pbiviz.json",
+          "type": "CustomVisualMetadata"
         }
       ]
     }

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "Clash3DExplorer",
+  "displayName": "3D Clash Explorer",
+  "displayOption": "FitToPage",
+  "height": 1000,
+  "width": 1600,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0B1320'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "s3d_register",
+      "target": "s3d_card0",
+      "type": "NoFilter"
+    },
+    {
+      "source": "s3d_register",
+      "target": "s3d_card1",
+      "type": "NoFilter"
+    },
+    {
+      "source": "s3d_register",
+      "target": "s3d_card2",
+      "type": "NoFilter"
+    },
+    {
+      "source": "s3d_register",
+      "target": "s3d_card3",
+      "type": "NoFilter"
+    },
+    {
+      "source": "s3d_register",
+      "target": "s3d_viewer",
+      "type": "DataFilter"
+    },
+    {
+      "source": "s3d_register",
+      "target": "s3d_elementA",
+      "type": "DataFilter"
+    },
+    {
+      "source": "s3d_register",
+      "target": "s3d_elementB",
+      "type": "DataFilter"
+    }
+  ]
+}

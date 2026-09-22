@@ -2,6 +2,10 @@
 
 Local Navisworks clash-history tracker for the HUMAIN project.
 
+## Complete Power BI project
+
+The repository includes the current seven-page Light and Dark dashboards, the shared semantic model, and source-aware Speckle 3D Clash Explorer. See [Power BI setup](powerbi/README.md) for CSV/Speckle parameters and authentication. Recent fixes restrict the clash register to slicer matches and defer camera fitting during direct clash selection.
+
 ## v1.6: clearer import and quality feedback
 
 Before confirming an import or replacement, the manager lists added, removed and retained tests with before/after record counts. Replacement compares against the selected snapshot; interval-quality checks still compare against the preceding active snapshot.

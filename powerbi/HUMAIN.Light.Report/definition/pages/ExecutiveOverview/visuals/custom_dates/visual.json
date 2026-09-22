@@ -4,7 +4,7 @@
   "position": {
     "x": 24,
     "y": 200,
-    "z": 49000,
+    "z": 26000,
     "height": 100,
     "width": 500
   },
@@ -37,10 +37,10 @@
       "data": [
         {
           "properties": {
-            "startDate": {
+            "endDate": {
               "expr": {
                 "Literal": {
-                  "Value": "datetime'2026-09-14T00:00:00'"
+                  "Value": "datetime'2026-09-17T00:00:00'"
                 }
               }
             },
@@ -48,13 +48,6 @@
               "expr": {
                 "Literal": {
                   "Value": "'Between'"
-                }
-              }
-            },
-            "isInvertedSelectionMode": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
                 }
               }
             }
@@ -131,7 +124,44 @@
       ],
       "general": [
         {
-          "properties": {}
+          "properties": {
+            "filter": {
+              "filter": {
+                "Version": 2,
+                "From": [
+                  {
+                    "Name": "p",
+                    "Entity": "PeriodDates",
+                    "Type": 0
+                  }
+                ],
+                "Where": [
+                  {
+                    "Condition": {
+                      "Comparison": {
+                        "ComparisonKind": 3,
+                        "Left": {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Source": "p"
+                              }
+                            },
+                            "Property": "Date"
+                          }
+                        },
+                        "Right": {
+                          "Literal": {
+                            "Value": "datetime'2026-09-18T00:00:00'"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
         }
       ],
       "slider": [
