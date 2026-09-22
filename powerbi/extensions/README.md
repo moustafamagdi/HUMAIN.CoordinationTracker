@@ -38,3 +38,11 @@ Create active, single-direction many-to-one relationships from `Clash3DSides[Cla
 Bind the Speckle visual's Model Info to `[3D Model Info]`, Object Keys to `Clash3DGeometry[Object Key]`, and Color By to `Clash3DGeometry[Side]`. Enable zoom on filter. A register using CurrentClashes fields must filter the viewer and A/B detail measures. Disable the register's interaction with summary cards so they retain slicer scope. Authenticate the visual locally.
 
 See [matching rules, usage, repair and validation](../../docs/item-path-and-3d.md).
+
+## Local camera compatibility adjustment
+
+The installed September 2026 Speckle visual requested camera fitting immediately after applying a new object filter. In the HUMAIN report, direct clash-to-clash transitions could leave the camera at the previous selection; clearing selection first avoided the problem.
+
+`patch-speckle-camera.mjs` applies a narrowly scoped local adjustment to an existing visual resource in both report folders. It requests a render and defers the camera fit by two animation frames plus 120 ms. A revision guard rejects obsolete requests and disposed/replaced renderers. No model data, matching rules, tokens or network behavior are changed. Original visual resources are backed up under `work/speckle-camera-backup` before modification; the script rejects already-patched or unrecognized code.
+
+Save and close the reports before running `node powerbi/extensions/patch-speckle-camera.mjs "C:\path\to\dashboard folder"`, then reopen. This is a local compatibility patch, not an upstream Speckle release; a future visual update may replace it. Re-test direct row changes after updating the visual. Validation covered direct transitions in Desktop and mocked latest-request/disposal checks.
