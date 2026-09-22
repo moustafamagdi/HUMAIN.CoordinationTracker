@@ -85,6 +85,15 @@ namespace HUMAIN.CoordinationTracker
         {
             int assertions = 0;
             Action<bool, string> check = (ok, name) => { assertions++; if (!ok) throw new Exception("FAILED: " + name); };
+            var pathRecord = new ClashRecord();
+            FillObject(pathRecord, System.Xml.Linq.XElement.Parse("<clashobject xmlns='urn:test'><objectattribute><name>Element ID</name><value>42</value></objectattribute><pathlink><node>File</node><node>Federation.nwd</node><node>Electrical.nwc</node><node>Tray &amp; Fittings</node></pathlink><smarttags><smarttag><name>Item Path</name><value>legacy</value></smarttag></smarttags></clashobject>"), true);
+            check(pathRecord.ItemAPath == "File > Federation.nwd > Electrical.nwc > Tray & Fittings", "native namespaced path preserves hierarchy and decoded XML");
+            check(pathRecord.ItemAElementId == "42", "path parsing preserves element ID");
+            FillObject(pathRecord, System.Xml.Linq.XElement.Parse("<clashobject><pathlink><node> </node></pathlink><smarttags><smarttag><name>Item Path</name><value>Legacy.nwc</value></smarttag></smarttags></clashobject>"), false);
+            check(pathRecord.ItemBPath == "Legacy.nwc", "empty native path falls back to legacy smart tag");
+            check(pathRecord.ItemAPath.Contains("Electrical.nwc"), "A and B paths stay separate");
+            FillObject(pathRecord, System.Xml.Linq.XElement.Parse("<clashobject/>"), false);
+            check(pathRecord.ItemBPath == "", "absent path remains absent");
             Func<string, List<ClashRecord>> rows = status => status == null ? new List<ClashRecord>() : new List<ClashRecord> {
                 new ClashRecord { ClashGuid = "test-guid", TestName = "01_Critical_EL vs STR", Status = status, Severity = "Critical" }
             };

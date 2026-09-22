@@ -1,0 +1,169 @@
+{
+  "tables": [
+    {
+      "name": "SpeckleMatchIndex",
+      "hidden": true,
+      "columns": [
+        {
+          "name": "ElementId",
+          "type": "String"
+        },
+        {
+          "name": "CandidateCount",
+          "type": "Int64"
+        },
+        {
+          "name": "ModelKey",
+          "type": "String"
+        }
+      ],
+      "expression": "VAR Identities = DISTINCT(SELECTCOLUMNS(FILTER(SpeckleElements, NOT ISBLANK(SpeckleElements[properties.Element.Id]) && TRIM(SpeckleElements[properties.Element.Id] & \"\") <> \"\" && SpeckleElements[Model Key] <> \"\"), \"ModelKey\", SpeckleElements[Model Key] & \"\", \"ElementId\", TRIM(SpeckleElements[properties.Element.Id] & \"\"), \"Identity\", COALESCE(SpeckleElements[properties.Source File], \"\") & \"|\" & COALESCE(SpeckleElements[properties.UniqueId], \"OBJECT:\" & FORMAT(SpeckleElements[Object Key], \"0\"))))\nRETURN GROUPBY(Identities, [ModelKey], [ElementId], \"CandidateCount\", COUNTX(CURRENTGROUP(), 1))"
+    },
+    {
+      "name": "Clash3DSides",
+      "hidden": false,
+      "columns": [
+        {
+          "name": "ClashKey",
+          "type": "String"
+        },
+        {
+          "name": "Side",
+          "type": "String"
+        },
+        {
+          "name": "ElementId",
+          "type": "String"
+        },
+        {
+          "name": "ItemPath",
+          "type": "String"
+        },
+        {
+          "name": "CandidateCount",
+          "type": "Int64"
+        },
+        {
+          "name": "MatchStatus",
+          "type": "String"
+        },
+        {
+          "name": "ModelKey",
+          "type": "String"
+        }
+      ],
+      "expression": "VAR Sides = UNION(\nSELECTCOLUMNS(CurrentClashes,\"ClashKey\",CurrentClashes[3D Clash Key],\"Side\",\"A\",\"ModelKey\",CurrentClashes[3D A Model Key] & \"\",\"ElementId\",TRIM(CurrentClashes[ItemAElementId] & \"\"),\"ItemPath\",CurrentClashes[ItemAPath]),\nSELECTCOLUMNS(CurrentClashes,\"ClashKey\",CurrentClashes[3D Clash Key],\"Side\",\"B\",\"ModelKey\",CurrentClashes[3D B Model Key] & \"\",\"ElementId\",TRIM(CurrentClashes[ItemBElementId] & \"\"),\"ItemPath\",CurrentClashes[ItemBPath]))\nVAR Counts = SELECTCOLUMNS(SpeckleMatchIndex,\"ModelKey\",SpeckleMatchIndex[ModelKey] & \"\",\"ElementId\",SpeckleMatchIndex[ElementId] & \"\",\"CandidateCount\",SpeckleMatchIndex[CandidateCount])\nRETURN ADDCOLUMNS(NATURALLEFTOUTERJOIN(Sides,Counts),\"MatchStatus\",SWITCH(TRUE(),[ElementId]=\"\",\"Missing element ID\",[ModelKey]=\"\",\"Missing source model\",ISBLANK([CandidateCount]),\"Model / ID not found\",[CandidateCount]>1,\"Ambiguous source identity - excluded\",\"Matched model + ID\"))"
+    },
+    {
+      "name": "Clash3DGeometry",
+      "hidden": false,
+      "columns": [
+        {
+          "name": "ClashKey",
+          "type": "String"
+        },
+        {
+          "name": "Side",
+          "type": "String"
+        },
+        {
+          "name": "ElementId",
+          "type": "String"
+        },
+        {
+          "name": "Object Key",
+          "type": "Int64"
+        },
+        {
+          "name": "SourceFile",
+          "type": "String"
+        },
+        {
+          "name": "UniqueId",
+          "type": "String"
+        },
+        {
+          "name": "Model Info",
+          "type": "String"
+        },
+        {
+          "name": "ModelKey",
+          "type": "String"
+        }
+      ],
+      "expression": "VAR Sides = SELECTCOLUMNS(FILTER(Clash3DSides,Clash3DSides[CandidateCount]=1),\"ClashKey\",Clash3DSides[ClashKey],\"Side\",Clash3DSides[Side],\"ModelKey\",Clash3DSides[ModelKey] & \"\",\"ElementId\",Clash3DSides[ElementId] & \"\")\nVAR Geometry = SELECTCOLUMNS(SpeckleElements,\"ModelKey\",SpeckleElements[Model Key] & \"\",\"ElementId\",TRIM(SpeckleElements[properties.Element.Id] & \"\"),\"Object Key\",SpeckleElements[Object Key],\"SourceFile\",SpeckleElements[properties.Source File],\"UniqueId\",SpeckleElements[properties.UniqueId],\"Model Info\",LOOKUPVALUE(Objects[Model Info],Objects[Object Key],SpeckleElements[Object Key]))\nRETURN NATURALINNERJOIN(Sides,Geometry)"
+    }
+  ],
+  "measures": [
+    {
+      "name": "3D Current Clashes",
+      "expression": "COUNTROWS(CurrentClashes)",
+      "format": "#,0"
+    },
+    {
+      "name": "3D Both Candidates",
+      "expression": "SUMX(VALUES(CurrentClashes[3D Clash Key]), IF(CALCULATE(COUNTROWS(Clash3DSides), Clash3DSides[CandidateCount] = 1) = 2, 1, 0))",
+      "format": "#,0"
+    },
+    {
+      "name": "3D Needs Review",
+      "expression": "[3D Current Clashes] - [3D Both Candidates]",
+      "format": "#,0"
+    },
+    {
+      "name": "3D Candidate Coverage",
+      "expression": "DIVIDE([3D Both Candidates], [3D Current Clashes])",
+      "format": "0.0%"
+    },
+    {
+      "name": "3D Selection Ready",
+      "expression": "IF(HASONEVALUE(CurrentClashes[3D Clash Key]), 1, 0)",
+      "format": "0"
+    },
+    {
+      "name": "3D Model Info",
+      "expression": "IF([3D Selection Ready] = 1, MAX(Clash3DGeometry[Model Info]))"
+    },
+    {
+      "name": "3D Match Summary",
+      "expression": "VAR N = CALCULATE(COUNTROWS(Clash3DSides), Clash3DSides[CandidateCount] = 1) RETURN IF([3D Selection Ready] <> 1, \"Select one clash\", SWITCH(N, 2, \"Both elements matched by model + ID\", 1, \"One element matched only\", \"No matched elements\"))"
+    },
+    {
+      "name": "3D Selection Caption",
+      "expression": "IF([3D Selection Ready] = 1, [3D Match Summary] & \" | \" & SELECTEDVALUE(CurrentClashes[ClashGuid]), \"Select one clash in the register to load its matched elements in 3D.\")"
+    },
+    {
+      "name": "3D A Match",
+      "expression": "IF([3D Selection Ready] = 1, CALCULATE(SELECTEDVALUE(Clash3DSides[MatchStatus]), Clash3DSides[Side] = \"A\"), \"Select one clash\")"
+    },
+    {
+      "name": "3D A Source",
+      "expression": "IF([3D Selection Ready] = 1, COALESCE(CALCULATE(SELECTEDVALUE(Clash3DGeometry[SourceFile]), Clash3DGeometry[Side] = \"A\"), \"No matched element\"), \"Select one clash\")"
+    },
+    {
+      "name": "3D B Match",
+      "expression": "IF([3D Selection Ready] = 1, CALCULATE(SELECTEDVALUE(Clash3DSides[MatchStatus]), Clash3DSides[Side] = \"B\"), \"Select one clash\")"
+    },
+    {
+      "name": "3D B Source",
+      "expression": "IF([3D Selection Ready] = 1, COALESCE(CALCULATE(SELECTEDVALUE(Clash3DGeometry[SourceFile]), Clash3DGeometry[Side] = \"B\"), \"No matched element\"), \"Select one clash\")"
+    }
+  ],
+  "calculatedColumns": [
+    {
+      "table": "SpeckleElements",
+      "name": "Model Key",
+      "expression": "VAR RawName = LOWER(TRIM(SpeckleElements[properties.Source File] & \"\"))\nVAR Segments = SUBSTITUTE(SUBSTITUTE(RawName, \"\\\", \"|\"), \"/\", \"|\")\nVAR FileName = IF(Segments = \"\", \"\", PATHITEM(Segments, PATHLENGTH(Segments), TEXT))\nVAR Stem = IF(RIGHT(FileName,4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"}, LEFT(FileName, MAX(0,LEN(FileName)-4)), FileName)\nRETURN IF(RIGHT(Stem,9) = \"_detached\", LEFT(Stem,MAX(0,LEN(Stem)-9)), Stem)"
+    },
+    {
+      "table": "CurrentClashes",
+      "name": "3D A Model Key",
+      "expression": "VAR PathHierarchy = SUBSTITUTE(TRIM(CurrentClashes[ItemAPath] & \"\"), \" > \", \"|\")\nVAR NodeCount = IF(PathHierarchy = \"\",0,PATHLENGTH(PathHierarchy))\nVAR FileNodes = FILTER(ADDCOLUMNS(GENERATESERIES(1,NodeCount), \"NodeName\", TRIM(PATHITEM(PathHierarchy,[Value],TEXT))), RIGHT(LOWER([NodeName]),4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"})\nVAR LastFile = MAXX(TOPN(1,FileNodes,[Value],DESC),[NodeName])\nRETURN VAR RawName = LOWER(TRIM(LastFile & \"\"))\nVAR Segments = SUBSTITUTE(SUBSTITUTE(RawName, \"\\\", \"|\"), \"/\", \"|\")\nVAR FileName = IF(Segments = \"\", \"\", PATHITEM(Segments, PATHLENGTH(Segments), TEXT))\nVAR Stem = IF(RIGHT(FileName,4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"}, LEFT(FileName, MAX(0,LEN(FileName)-4)), FileName)\nRETURN IF(RIGHT(Stem,9) = \"_detached\", LEFT(Stem,MAX(0,LEN(Stem)-9)), Stem)"
+    },
+    {
+      "table": "CurrentClashes",
+      "name": "3D B Model Key",
+      "expression": "VAR PathHierarchy = SUBSTITUTE(TRIM(CurrentClashes[ItemBPath] & \"\"), \" > \", \"|\")\nVAR NodeCount = IF(PathHierarchy = \"\",0,PATHLENGTH(PathHierarchy))\nVAR FileNodes = FILTER(ADDCOLUMNS(GENERATESERIES(1,NodeCount), \"NodeName\", TRIM(PATHITEM(PathHierarchy,[Value],TEXT))), RIGHT(LOWER([NodeName]),4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"})\nVAR LastFile = MAXX(TOPN(1,FileNodes,[Value],DESC),[NodeName])\nRETURN VAR RawName = LOWER(TRIM(LastFile & \"\"))\nVAR Segments = SUBSTITUTE(SUBSTITUTE(RawName, \"\\\", \"|\"), \"/\", \"|\")\nVAR FileName = IF(Segments = \"\", \"\", PATHITEM(Segments, PATHLENGTH(Segments), TEXT))\nVAR Stem = IF(RIGHT(FileName,4) IN {\".rvt\", \".nwc\", \".nwd\", \".ifc\", \".dwg\"}, LEFT(FileName, MAX(0,LEN(FileName)-4)), FileName)\nRETURN IF(RIGHT(Stem,9) = \"_detached\", LEFT(Stem,MAX(0,LEN(Stem)-9)), Stem)"
+    }
+  ]
+}

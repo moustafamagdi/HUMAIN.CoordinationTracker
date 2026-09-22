@@ -24,7 +24,7 @@ namespace HUMAIN.CoordinationTracker
             try
             {
                 Console.OutputEncoding = Encoding.UTF8;
-                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); RunQualityReviewTests(); return; }
+                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); RunQualityReviewTests(); RunPathRepairTests(); return; }
                 int rootArg = Array.IndexOf(args, "--data-root");
                 if (rootArg >= 0)
                 {
@@ -36,6 +36,12 @@ namespace HUMAIN.CoordinationTracker
                 }
                 EnsureFolders();
                 using (AcquireProjectLock()) RecoverPending();
+                int pathRepairArg = Array.IndexOf(args, "--repair-paths");
+                if (pathRepairArg >= 0)
+                {
+                    if (pathRepairArg + 1 >= args.Length) throw new ArgumentException("--repair-paths requires the XML export directory for the latest active snapshot.");
+                    RepairLatestPaths(args[pathRepairArg + 1]); return;
+                }
                 if (args.Length == 0 || args.Contains("--gui")) { System.Windows.Forms.Application.EnableVisualStyles(); System.Windows.Forms.Application.Run(new ManagerForm()); return; }
                 if (args.Contains("--rebuild")) { CommitChange("Rebuild", delegate { }); Console.WriteLine("Rebuild completed: " + PowerBiRoot); return; }
 
@@ -366,7 +372,13 @@ namespace HUMAIN.CoordinationTracker
             string objectName = FirstNonEmpty(ElementValue(clashObject, "objectname"), FindSmartTag(clashObject, "Item Name"));
             string itemId = FirstNonEmpty(FindObjectAttribute(clashObject, "Element ID"), FindSmartTag(clashObject, "Item ID"));
             string layer = FindSmartTag(clashObject, "Layer");
-            string itemPath = FindSmartTag(clashObject, "Item Path");
+            // Navisworks exports Report > Item Path as pathlink/node, not a smart tag.
+            // Keep every hierarchy node in order; the source file is not necessarily the root NWD.
+            XElement pathLink = clashObject.Elements().FirstOrDefault(x => LocalName(x) == "pathlink");
+            string itemPath = pathLink == null ? string.Empty : string.Join(" > ",
+                pathLink.Elements().Where(x => LocalName(x) == "node")
+                    .Select(x => x.Value.Trim()).Where(x => x.Length > 0));
+            itemPath = FirstNonEmpty(itemPath, FindSmartTag(clashObject, "Item Path"));
 
             if (first)
             {

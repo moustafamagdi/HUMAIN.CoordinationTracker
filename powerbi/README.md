@@ -20,6 +20,8 @@ Keep both report folders and the semantic model together; relative dataset links
 5. Resolution & Approvals
 6. Snapshot Quality
 
+An optional [Speckle 3D extension specification](extensions/README.md) documents the additional model tables, measures, source-aware matching and viewer bindings used in the local 3D Clash Explorer. It requires the Speckle connector and local authentication; the base reports do not require it.
+
 Read the [Arabic card and meeting guide](../docs/dashboard-guide.ar.md) and [period/quality specification](../docs/reporting-periods-and-quality.md).
 
 The repository contains report definitions, Power Query, relationships, DAX and themes. It excludes `.pbi`, imported model caches, original XML snapshots, local CSV exports and compiled binaries. Dark and Light share business measures; their conditional net-reduction colors differ. Removed custom Help tooltips are not included; normal data tooltips remain.

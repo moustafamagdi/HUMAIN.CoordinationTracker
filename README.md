@@ -2,6 +2,10 @@
 
 Local Navisworks clash-history tracker for the HUMAIN project.
 
+## v1.5: native item paths
+
+Navisworks XML Item Path is now read from `pathlink/node`, with legacy SmartTag fallback. Existing latest-snapshot paths can be recovered from the original XML using `--repair-paths "C:\path\to\XML"`; the transaction rejects non-path differences and preserves progress and existing review decisions. See [item-path repair and Speckle 3D matching](docs/item-path-and-3d.md) for the workflow and source-model + Element ID matching rules.
+
 ## Snapshot Manager (Windows interface)
 
 Launch the executable without arguments to open the snapshot list, import preview, selected-snapshot replacement, reversible exclusion/restoration, and backup controls. Changes rebuild in staging and publish with rollback/recovery. Refresh Power BI only after completion.
