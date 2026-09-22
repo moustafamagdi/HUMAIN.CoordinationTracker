@@ -126,7 +126,7 @@
     },
     {
       "name": "3D Match Summary",
-      "expression": "VAR N = CALCULATE(COUNTROWS(Clash3DSides), Clash3DSides[CandidateCount] = 1) RETURN IF([3D Selection Ready] <> 1, \"Select one clash\", SWITCH(N, 2, \"Both elements matched by model + ID\", 1, \"One element matched only\", \"No matched elements\"))"
+      "expression": "IF(ISEMPTY(CurrentClashes), BLANK(), VAR N = CALCULATE(COUNTROWS(Clash3DSides), Clash3DSides[CandidateCount] = 1) RETURN IF([3D Selection Ready] <> 1, \"Select one clash\", SWITCH(N, 2, \"Both elements matched by model + ID\", 1, \"One element matched only\", \"No matched elements\")))"
     },
     {
       "name": "3D Selection Caption",
