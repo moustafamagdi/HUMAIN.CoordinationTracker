@@ -2,6 +2,14 @@
 
 Local Navisworks clash-history tracker for the HUMAIN project.
 
+## v1.6: clearer import and quality feedback
+
+Before confirming an import or replacement, the manager lists added, removed and retained tests with before/after record counts. Replacement compares against the selected snapshot; interval-quality checks still compare against the preceding active snapshot.
+
+The export-folder check includes subfolders and warns when XML modification times span more than five minutes. This is an advisory heuristic, not proof of stale data; no files are automatically excluded. A fresh empty export folder remains the most reliable way to avoid leftovers.
+
+The staged review and saved result list cleared, remaining and new quality alerts across active intervals. Accepted scope alerts explicitly say `Scope change - accepted review`: the decision is saved, but the scope issue remains. These changes do not alter forecast gating, clash classification or source data. Validation: 280 assertions pass.
+
 ## v1.5: native item paths
 
 Navisworks XML Item Path is now read from `pathlink/node`, with legacy SmartTag fallback. Existing latest-snapshot paths can be recovered from the original XML using `--repair-paths "C:\path\to\XML"`; the transaction rejects non-path differences and preserves progress and existing review decisions. See [item-path repair and Speckle 3D matching](docs/item-path-and-3d.md) for the workflow and source-model + Element ID matching rules.

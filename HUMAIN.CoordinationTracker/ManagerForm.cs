@@ -40,6 +40,7 @@ namespace HUMAIN.CoordinationTracker
             {
                 RecoverPending();
                 string before = ProjectSummary(), root = AppRoot;
+                var beforeQuality = ReadQualityAlerts();
                 string stage = Path.Combine(root, "Transactions", "preview-" + Guid.NewGuid().ToString("N"));
                 CopyTree(SnapshotsRoot, Path.Combine(stage, "Snapshots"));
                 CopyTree(Path.Combine(AppRoot, "QualityReviews"), Path.Combine(stage, "QualityReviews"));
@@ -47,7 +48,7 @@ namespace HUMAIN.CoordinationTracker
                 {
                     SetRoot(stage); EnsureFolders(); action(); ValidateSnapshots(); RebuildDerivedFiles();
                     return "BEFORE\r\n" + before + "\r\n\r\nAFTER\r\n" + ProjectSummary() +
-                        "\r\n\r\nAll historical movements, ages and forecasts are recalculated. Refresh Power BI only after completion.";
+                        "\r\n\r\n" + QualityChangeSummary(beforeQuality, ReadQualityAlerts()) + "\r\n\r\nAll historical movements, ages and forecasts are recalculated. Refresh Power BI only after completion.";
                 }
                 finally { SetRoot(root); CleanTransaction(stage, root); }
             }
@@ -64,6 +65,7 @@ namespace HUMAIN.CoordinationTracker
             private readonly FlowLayoutPanel actions = new FlowLayoutPanel(), import = new FlowLayoutPanel();
             private Action pending;
             private string pendingLabel, revision;
+            private string lastQualityResult = "";
             private bool busy;
 
             public ManagerForm()
@@ -146,7 +148,7 @@ namespace HUMAIN.CoordinationTracker
                         }).ToList(); }
                     });
                     grid.Rows.Clear(); foreach (var r in rows) { int i = grid.Rows.Add(r.Skip(1).ToArray()); grid.Rows[i].Tag = r[0]; }
-                    preview.Text = FriendlyReport(ProjectSummary()); status.Text = completion ?? "Ready | " + AppRoot;
+                    preview.Text = FriendlyReport(ProjectSummary()) + (completion == null ? "" : "\r\n\r\n" + lastQualityResult); status.Text = completion ?? "Ready | " + AppRoot;
                 }
                 catch (Exception ex) { ShowError(ex); } finally { SetBusy(false); }
             }
@@ -172,7 +174,7 @@ namespace HUMAIN.CoordinationTracker
                         SaveSnapshot(new SnapshotChoice { Timestamp = date, FolderPath = target, IsOverwrite = selected != null }, imported);
                     };
                     revision = SnapshotRevision();
-                    string intro = MessagePreview(imported, date, selected);
+                    string intro = ExportFileCheck(source) + "\r\n" + MessagePreview(imported, date, selected);
                     string report = await Task.Run(() => PreviewChange(change));
                     preview.Text = intro + "\r\n" + report;
                     pending = change; pendingLabel = (selected == null ? "Import " : "Replace ") + name + " | " + note;
@@ -223,7 +225,7 @@ namespace HUMAIN.CoordinationTracker
             {
                 if (pending == null || busy) return;
                 bool saved = false; var action = pending; string label = pendingLabel, expected = revision; SetBusy(true); status.Text = "Saving and updating data. Wait before refreshing Power BI.";
-                try { await Task.Run(() => CommitChange(label, action, expected)); pending = null; preview.Text += "\r\n\r\nAPPLIED SUCCESSFULLY. Backup saved. Refresh Power BI now."; saved = true; status.Text = "Saved. You can now refresh Power BI."; }
+                try { lastQualityResult = await Task.Run(() => { var beforeQuality = ReadQualityAlerts(); CommitChange(label, action, expected); return QualityChangeSummary(beforeQuality, ReadQualityAlerts()); }); pending = null; preview.Text += "\r\n\r\nAPPLIED SUCCESSFULLY. Backup saved. Refresh Power BI now."; saved = true; status.Text = "Saved. You can now refresh Power BI."; }
                 catch (Exception ex) { pending = null; ShowError(ex); } finally { SetBusy(false); }
                 if (saved) Reload("Saved and list updated. You can now refresh Power BI.");
             }

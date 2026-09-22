@@ -108,7 +108,9 @@ namespace HUMAIN.CoordinationTracker
                 alerts.Dock = DockStyle.Fill; alerts.ReadOnly = true; alerts.AllowUserToAddRows = false; alerts.MultiSelect = false;
                 alerts.SelectionMode = DataGridViewSelectionMode.FullRowSelect; alerts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; alerts.RowHeadersVisible = false;
                 foreach (var h in new[] { "Snapshot", "Test", "Review status", "Forecast blocker", "Reviewer" }) alerts.Columns.Add(h, h);
-                alerts.Columns.Add("Unsaved", "Unsaved"); alerts.Columns[1].FillWeight = 200; layout.Controls.Add(alerts);
+                alerts.Columns.Add("Unsaved", "Unsaved"); alerts.Columns[1].FillWeight = 200; alerts.Columns[3].FillWeight = 180; layout.Controls.Add(alerts);
+                alerts.Columns[3].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+                alerts.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
                 details.Dock = DockStyle.Fill; details.Multiline = true; details.ReadOnly = true; details.ScrollBars = ScrollBars.Vertical; layout.Controls.Add(details);
                 var inputs = new FlowLayoutPanel { Dock = DockStyle.Fill };
                 inputs.Controls.Add(new Label { Text = "Decision:", AutoSize = true }); state.DropDownStyle = ComboBoxStyle.DropDownList; state.Width = 180;
@@ -132,7 +134,7 @@ namespace HUMAIN.CoordinationTracker
                     {
                         RecoverPending(); revision = SnapshotRevision(); loading = true; editing = null; alerts.Rows.Clear();
                         foreach (var a in ReadQualityAlerts())
-                        { int i = alerts.Rows.Add(a["SnapshotDateTime"], a["TestName"], a["ReviewStatus"], a["RequiresAction"] == "1" ? "Yes" : "No", a["ReviewedBy"]); alerts.Rows[i].Tag = a; }
+                        { int i = alerts.Rows.Add(a["SnapshotDateTime"], a["TestName"], a["ReviewStatus"], QualityBlockerText(a), a["ReviewedBy"]); alerts.Rows[i].Tag = a; }
                     }
                     loading = false; SelectAlert(); UpdateSaveState();
                 }
@@ -168,7 +170,7 @@ namespace HUMAIN.CoordinationTracker
                 try
                 {
                     if (a == null) { details.Text = "Select an alert."; return; }
-                    details.Text = a["Reason"] + "\r\nPrevious records: " + a["PreviousTotal"] + " | Current records: " + a["CurrentTotal"] +
+                    details.Text = "Forecast blocker: " + QualityBlockerText(a) + "\r\n" + ((a["RequiresAction"] == "1" && a["ReviewStatus"] == "Accepted") ? "Your review is saved. Added / missing test scope still needs correction; acceptance does not remove test records.\r\n" : "") + a["Reason"] + "\r\nPrevious records: " + a["PreviousTotal"] + " | Current records: " + a["CurrentTotal"] +
                         "\r\nLast saved review: " + a["ReviewedAt"] + "\r\nSaved reason: " + a["ReviewReason"];
                     QualityDecision draft;
                     if (drafts.TryGetValue(a["AlertId"], out draft)) { state.SelectedItem = draft.Status; reason.Text = draft.Reason; reviewer.Text = draft.Reviewer; }

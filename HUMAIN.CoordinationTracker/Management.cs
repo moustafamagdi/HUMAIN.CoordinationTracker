@@ -175,6 +175,8 @@ namespace HUMAIN.CoordinationTracker
             var previous = prior == null ? SnapshotData.Empty() : LoadSnapshot(prior);
             var result = new StringBuilder();
             result.AppendLine("Snapshot: " + timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
+            if (replacing != null) result.AppendLine("CHANGES TO SELECTED SNAPSHOT\r\n" + TestChanges(LoadSnapshot(GetSnapshotRefs(true).Single(x => Path.GetFileName(x.FolderPath) == replacing)), imported));
+            else result.AppendLine("TEST SCOPE VS PREVIOUS SNAPSHOT\r\n" + TestChanges(previous, imported));
             result.AppendLine("Tests: " + imported.Tests.Count + " | Records: " + imported.Records.Count);
             result.AppendLine(prior == null ? "BASELINE: this becomes the first active snapshot." : "Compared with: " + prior.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
             var known = new HashSet<string>(imported.Records.Select(x => x.ClashGuid), StringComparer.OrdinalIgnoreCase);

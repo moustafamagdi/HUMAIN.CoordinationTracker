@@ -53,6 +53,7 @@
     <Compile Include="Management.cs" />
     <Compile Include="ManagerForm.cs" />
     <Compile Include="PathRepair.cs" />
+    <Compile Include="ImportFeedback.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -24,7 +24,7 @@ namespace HUMAIN.CoordinationTracker
             try
             {
                 Console.OutputEncoding = Encoding.UTF8;
-                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); RunQualityReviewTests(); RunPathRepairTests(); return; }
+                if (args.Contains("--self-test")) { RunWorkflowTests(); RunQualityTests(); RunManagementTests(); RunQualityReviewTests(); RunPathRepairTests(); RunImportFeedbackTests(); return; }
                 int rootArg = Array.IndexOf(args, "--data-root");
                 if (rootArg >= 0)
                 {
