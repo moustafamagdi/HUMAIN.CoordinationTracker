@@ -37,24 +37,10 @@
       "data": [
         {
           "properties": {
-            "startDate": {
-              "expr": {
-                "Literal": {
-                  "Value": "datetime'2026-09-14T00:00:00'"
-                }
-              }
-            },
             "mode": {
               "expr": {
                 "Literal": {
                   "Value": "'Between'"
-                }
-              }
-            },
-            "isInvertedSelectionMode": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
                 }
               }
             }
@@ -236,8 +222,13 @@
             },
             "text": {
               "expr": {
-                "Literal": {
-                  "Value": "'Date range | used only for Custom period'"
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Metrics"
+                    }
+                  },
+                  "Property": "Custom Period Title"
                 }
               }
             },
@@ -245,8 +236,13 @@
               "solid": {
                 "color": {
                   "expr": {
-                    "Literal": {
-                      "Value": "'#ECF2F8'"
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Metrics"
+                        }
+                      },
+                      "Property": "Custom Period Color"
                     }
                   }
                 }

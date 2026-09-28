@@ -1,12 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "status_5",
+  "name": "change_7d_note",
   "position": {
-    "x": 1334,
-    "y": 440,
-    "z": 25000,
-    "height": 80,
-    "width": 244
+    "x": 810,
+    "y": 568,
+    "z": 27000,
+    "height": 30,
+    "width": 506
   },
   "visual": {
     "visualType": "card",
@@ -22,11 +22,11 @@
                       "Entity": "Metrics"
                     }
                   },
-                  "Property": "Approval Revoked"
+                  "Property": "Actionable Change 7d Caption"
                 }
               },
-              "queryRef": "Metrics.Approval Revoked",
-              "nativeQueryRef": "Approval Revoked"
+              "queryRef": "Metrics.Actionable Change 7d Caption",
+              "nativeQueryRef": "Actionable Change 7d Caption"
             }
           ]
         }
@@ -41,7 +41,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#C33D55'"
+                      "Value": "'#52657B'"
                     }
                   }
                 }
@@ -50,14 +50,21 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "24D"
+                  "Value": "10D"
                 }
               }
             },
             "labelDisplayUnits": {
               "expr": {
                 "Literal": {
-                  "Value": "1D"
+                  "Value": "0D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }
@@ -85,25 +92,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "color": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#FFFFFF'"
-                    }
-                  }
-                }
-              }
-            },
-            "transparency": {
-              "expr": {
-                "Literal": {
-                  "Value": "0D"
+                  "Value": "false"
                 }
               }
             }
@@ -136,14 +125,14 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             },
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'APPROVAL REVOKED'"
+                  "Value": "''"
                 }
               }
             },
@@ -216,26 +205,6 @@
               "expr": {
                 "Literal": {
                   "Value": "true"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "visualTooltip": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "type": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Default'"
                 }
               }
             }

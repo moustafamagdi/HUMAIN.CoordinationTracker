@@ -1,0 +1,63 @@
+-- Net Reduction excl Approvals | Format: #,0;-#,0;0
+Net Reduction excl Approvals =
+[Net Actionable Reduction] - [Actionable Approved]
+
+-- Net Reduction Split Caption
+Net Reduction Split Caption =
+VAR engineering = [Actionable Resolved] - [New Actionable] - [Returned to Action] RETURN "Resolved-driven: " & FORMAT(engineering,"#,0;-#,0;0") & " | Approval-driven: " & FORMAT([Actionable Approved],"#,0")
+
+-- Resolved Split Caption
+Resolved Split Caption =
+"By status: " & FORMAT([Resolved By Status],"#,0") & UNICHAR(10) & "By disappearance: " & FORMAT([Resolved Disappeared],"#,0")
+
+-- Actionable Comparison Snapshot 7d | Format: dd MMM yyyy HH:mm
+Actionable Comparison Snapshot 7d =
+VAR s = [Selected Snapshot]
+VAR prior = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s-7)
+VAR earliest = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s)
+RETURN IF(NOT ISBLANK(s), IF(NOT ISBLANK(prior), prior, IF(earliest < s, earliest)))
+
+-- Actionable Change 7d | Format: +#,0;-#,0;0
+Actionable Change 7d =
+VAR reference = [Actionable Comparison Snapshot 7d]
+VAR opening = CALCULATE(SUM(OperationalProgress[Actionable]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] = reference)
+RETURN IF(NOT ISBLANK(reference), [Actionable Open] - COALESCE(opening,0))
+
+-- Actionable Change 7d Caption
+Actionable Change 7d Caption =
+VAR s = [Selected Snapshot]
+VAR reference = [Actionable Comparison Snapshot 7d]
+VAR days = s-reference
+RETURN IF(ISBLANK(reference), "No earlier snapshot", "vs " & FORMAT(reference,"dd MMM yyyy HH:mm") & " | " & FORMAT(days,"0.0") & " days" & IF(days<7," (short history)",IF(days>7.01," (snapshot gap)","")))
+
+-- Actionable Change 7d Color
+Actionable Change 7d Color =
+VAR delta = [Actionable Change 7d] RETURN SWITCH(TRUE(),ISBLANK(delta) || delta=0,"#A4B7CA",delta>0,"#EF7181","#42D3BC")
+
+-- Net Reduction excl Approvals Color
+Net Reduction excl Approvals Color =
+IF([Net Reduction excl Approvals]<0,"#EF7181","#42D3BC")
+
+-- Custom Period Color
+Custom Period Color =
+IF(SELECTEDVALUE(ReportingPeriod[Mode],"All history")="Custom period","#42D3BC","#A4B7CA")
+
+-- Actionable Change 7d Color Light
+Actionable Change 7d Color Light =
+VAR delta = [Actionable Change 7d] RETURN SWITCH(TRUE(),ISBLANK(delta) || delta=0,"#52657B",delta>0,"#C33D55","#087F75")
+
+-- Net Reduction excl Approvals Color Light
+Net Reduction excl Approvals Color Light =
+IF([Net Reduction excl Approvals]<0,"#C33D55","#087F75")
+
+-- Custom Period Color Light
+Custom Period Color Light =
+IF(SELECTEDVALUE(ReportingPeriod[Mode],"All history")="Custom period","#087F75","#52657B")
+
+-- Custom Period Title
+Custom Period Title =
+IF(SELECTEDVALUE(ReportingPeriod[Mode],"All history")="Custom period","Date range | ACTIVE for Custom period","Date range | INACTIVE - used only for Custom period")
+
+-- Quality Alerts Banner
+Quality Alerts Banner =
+VAR flags = CALCULATE([Quality Flags],REMOVEFILTERS(Tests)) VAR pending = CALCULATE([Quality Action Required],REMOVEFILTERS(Tests)) RETURN IF([Period Snapshots]=0,"NO EXPORT IN PERIOD | Movement = 0; stock is last known. Check snapshot date.",IF(pending>0,"QUALITY ALERTS | " & FORMAT(pending,"0") & " quality alerts require action. Review in Tracker.",IF(flags>0,"QUALITY ALERTS REVIEWED | " & FORMAT(flags,"0") & " original quality alerts retained; none require action in period.","QUALITY CHECK | No rule triggered; export completeness is not guaranteed.")))

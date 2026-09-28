@@ -61,13 +61,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "CurrentClashes"
+                      "Entity": "Tests"
                     }
                   },
                   "Property": "DisciplinePair"
                 }
               },
-              "queryRef": "CurrentClashes.DisciplinePair",
+              "queryRef": "Tests.DisciplinePair",
               "nativeQueryRef": "DisciplinePair"
             },
             {

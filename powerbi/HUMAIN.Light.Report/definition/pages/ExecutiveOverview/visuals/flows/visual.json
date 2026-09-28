@@ -3,7 +3,7 @@
   "name": "flows",
   "position": {
     "x": 810,
-    "y": 535,
+    "y": 608,
     "z": 3000,
     "height": 240,
     "width": 766
@@ -22,11 +22,11 @@
                       "Entity": "Snapshots"
                     }
                   },
-                  "Property": "SnapshotDateTime"
+                  "Property": "SnapshotDate"
                 }
               },
-              "queryRef": "Snapshots.SnapshotDateTime",
-              "nativeQueryRef": "SnapshotDateTime",
+              "queryRef": "Snapshots.SnapshotDate",
+              "nativeQueryRef": "SnapshotDate",
               "active": true
             }
           ]
@@ -122,6 +122,13 @@
               "expr": {
                 "Literal": {
                   "Value": "false"
+                }
+              }
+            },
+            "axisType": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Categorical'"
                 }
               }
             }
@@ -269,7 +276,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A96800'"
+                      "Value": "'#7254A3'"
                     }
                   }
                 }
@@ -347,7 +354,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Actionable movement | inflow, resolved and approved'"
+                  "Value": "'Daily actionable movement | inflow, resolved, approved'"
                 }
               }
             },

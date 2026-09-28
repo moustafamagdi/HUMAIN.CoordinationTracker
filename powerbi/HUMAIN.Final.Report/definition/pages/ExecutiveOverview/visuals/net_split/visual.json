@@ -1,12 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "status_5",
+  "name": "net_split",
   "position": {
-    "x": 1334,
-    "y": 440,
-    "z": 25000,
-    "height": 80,
-    "width": 244
+    "x": 810,
+    "y": 416,
+    "z": 27000,
+    "height": 56,
+    "width": 506
   },
   "visual": {
     "visualType": "card",
@@ -22,11 +22,11 @@
                       "Entity": "Metrics"
                     }
                   },
-                  "Property": "Approval Revoked"
+                  "Property": "Net Reduction Split Caption"
                 }
               },
-              "queryRef": "Metrics.Approval Revoked",
-              "nativeQueryRef": "Approval Revoked"
+              "queryRef": "Metrics.Net Reduction Split Caption",
+              "nativeQueryRef": "Net Reduction Split Caption"
             }
           ]
         }
@@ -41,7 +41,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#EF7181'"
+                      "Value": "'#A4B7CA'"
                     }
                   }
                 }
@@ -50,14 +50,21 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "24D"
+                  "Value": "10D"
                 }
               }
             },
             "labelDisplayUnits": {
               "expr": {
                 "Literal": {
-                  "Value": "1D"
+                  "Value": "0D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
                 }
               }
             }
@@ -85,25 +92,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "color": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#142235'"
-                    }
-                  }
-                }
-              }
-            },
-            "transparency": {
-              "expr": {
-                "Literal": {
-                  "Value": "0D"
+                  "Value": "false"
                 }
               }
             }
@@ -136,14 +125,14 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             },
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'APPROVAL REVOKED'"
+                  "Value": "''"
                 }
               }
             },
@@ -216,26 +205,6 @@
               "expr": {
                 "Literal": {
                   "Value": "true"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "visualTooltip": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "type": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Default'"
                 }
               }
             }

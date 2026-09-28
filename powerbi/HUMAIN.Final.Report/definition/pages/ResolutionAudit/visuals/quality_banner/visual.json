@@ -23,11 +23,11 @@
                       "Entity": "Metrics"
                     }
                   },
-                  "Property": "Quality Banner"
+                  "Property": "Quality Alerts Banner"
                 }
               },
-              "queryRef": "Metrics.Quality Banner",
-              "nativeQueryRef": "Quality Banner"
+              "queryRef": "Metrics.Quality Alerts Banner",
+              "nativeQueryRef": "Quality Alerts Banner"
             }
           ]
         }

@@ -30,6 +30,12 @@ Both local Speckle resources include the documented camera timing compatibility 
 
 Read the [Arabic card and meeting guide](../docs/dashboard-guide.ar.md) and [period/quality specification](../docs/reporting-periods-and-quality.md). OperationalProgress is authoritative for actionable metrics. Legacy DashboardKPI/OpenClashes and DailyProgress/Current include Approved among unresolved records.
 
+## Executive review — September 28, 2026
+
+The synchronized Dark/Light Executive layouts add net reduction excluding approvals, resolution-source captions and a seven-day actionable stock comparison. Forecast still includes approvals. Count cards use full numbers, Resolution Rate uses one decimal, flow bars group by date, and the Top 10 is a wider ranked table. Reviewed clashes and retained resolved records are shown on Resolution & Approvals. Severity colors are red/amber/blue; approved values use purple. Pair labels are normalized alphabetically in the Tests dimension during refresh, preserving A/B direction in source fields.
+
+The Executive canvas is taller (1600 × 1330); use Fit to width when checking readability. The custom-date slicer shows whether it is active; it is not hidden. See [review results and Desktop checklist](../docs/executive-review-2026-09-28.md) and [exact added DAX](../docs/executive-review-new-measures.dax). This update has static/source and CSV validation, not Desktop runtime or visual validation.
+
 ## Distribution and privacy
 
 This repository contains report layouts, Power Query, relationships, DAX, themes and embedded visual resources. It excludes `.pbi` caches, original XML, CSV datasets, snapshot/review stores and compiled binaries. Speckle visual `storedData` account state is removed from distribution definitions; recipients authenticate locally. The working reports retain their own local authentication.

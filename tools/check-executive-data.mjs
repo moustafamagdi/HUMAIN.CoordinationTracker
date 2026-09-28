@@ -1,0 +1,22 @@
+import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
+const folder=process.argv[2]||path.join(process.env.LOCALAPPDATA,'HUMAIN.CoordinationTracker/PowerBI');
+function csv(name){const s=fs.readFileSync(path.join(folder,name+'.csv'),'utf8').replace(/^\uFEFF/,'');const rows=[];let row=[],field='',quoted=false;for(let i=0;i<s.length;i++){const c=s[i];if(c==='"'){if(quoted&&s[i+1]==='"'){field+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(field);field='';}else if((c==='\r'||c==='\n')&&!quoted){if(c==='\r'&&s[i+1]==='\n')i++;row.push(field);field='';if(row.some(x=>x!==''))rows.push(row);row=[];}else field+=c;}if(field||row.length){row.push(field);rows.push(row);}const header=rows.shift();return rows.map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]])));}
+const op=csv('OperationalProgress'),daily=csv('DailyProgress'),tests=csv('TestPerformance');
+const dates=[...new Set(daily.map(r=>r.SnapshotDateTime))].sort(),nonbaseline=new Set(daily.filter(r=>r.IsBaseline==='No').map(r=>r.SnapshotDateTime));
+const flows=op.filter(r=>nonbaseline.has(r.SnapshotDateTime)),sum=(rows,k)=>rows.reduce((a,r)=>a+Number(r[k]||0),0);
+function totals(rows){const net=sum(rows,'NetActionableReduction'),approved=sum(rows,'ApprovedFromActionable'),resolved=sum(rows,'ResolvedFromActionable'),inflow=sum(rows,'NewActionable')+sum(rows,'ReturnedActionable'),status=sum(rows,'ResolvedByStatus'),disappearance=sum(rows,'ResolvedByDisappearance'),all=sum(rows,'Resolved');assert.equal(net-approved,resolved-inflow);assert.equal(status+disappearance,all);return{net,netExcludingApprovals:net-approved,approvedFromActionable:approved,actionableResolved:resolved,inflow,resolvedAll:all,byStatus:status,byDisappearance:disappearance};}
+for(const row of flows)totals([row]);
+const time=s=>Date.parse(s.replace(' ','T')+'Z'),latest=dates.at(-1),cutoff=time(latest)-7*86400000,reference=dates.filter(s=>time(s)<=cutoff).at(-1)||dates.find(s=>s<latest);
+const stock=s=>sum(op.filter(r=>r.SnapshotDateTime===s),'Actionable');
+const pairByTest=new Map();for(const t of tests)if(!pairByTest.has(t.TestName)){const a=t.DisciplineA.trim().toUpperCase(),b=t.DisciplineB.trim().toUpperCase();pairByTest.set(t.TestName,a&&b?[a,b].sort().join(' vs '):t.DisciplinePair);}
+const current=op.filter(r=>r.SnapshotDateTime===latest),pairs=new Map();for(const r of current){const key=pairByTest.get(r.TestName);assert(key,'Missing Tests dimension entry');pairs.set(key,(pairs.get(key)||0)+Number(r.Actionable));}
+assert.equal([...pairs.values()].reduce((a,b)=>a+b,0),stock(latest));
+for(const key of pairs.keys()){const parts=key.split(' vs ');if(parts.length===2&&parts[0]!==parts[1])assert(!pairs.has(parts.reverse().join(' vs ')),'Reversed duplicate');}
+// Calendar-date grouping is safe for the existing flow predicates: every timestamp
+// of a date is inside/outside a midnight-to-midnight period together.
+let boundaryCases=0;const calendar=[...new Set(dates.map(x=>x.slice(0,10)))];
+for(const start of calendar)for(const endDate of calendar){const b=time(start+' 00:00:00'),e=time(endDate+' 00:00:00')+86400000;if(e<=b)continue;for(const field of ['NewActionable','ReturnedActionable','ResolvedFromActionable','ApprovedFromActionable']){const direct=sum(op.filter(r=>time(r.SnapshotDateTime)>=b&&time(r.SnapshotDateTime)<e),field);let grouped=0;for(const day of calendar){const rows=op.filter(r=>r.SnapshotDateTime.startsWith(day)),s=Math.max(...rows.map(r=>time(r.SnapshotDateTime)));if(s>=b&&s<e)grouped+=sum(rows,field);}assert.equal(grouped,direct);boundaryCases++;}}
+// Explicit empty, single-snapshot, short-history and sparse-history reference rules.
+const ref=(ds,s)=>ds.filter(x=>x<=s-7).at(-1)??ds.find(x=>x<s)??null;
+assert.equal(ref([],10),null);assert.equal(ref([10],10),null);assert.equal(ref([10,12],12),10);assert.equal(ref([1,5,12],12),5);assert.equal(ref([1,9,12],12),1);
+console.log(JSON.stringify({latest,reference,currentActionable:stock(latest),referenceActionable:reference?stock(reference):null,change7d:reference?stock(latest)-stock(reference):null,allHistory:totals(flows),sep17:dates.filter(s=>s.startsWith('2026-09-17')).map(s=>({snapshot:s,actionable:stock(s),...totals(flows.filter(r=>r.SnapshotDateTime===s))})),pairCheck:{directionalGroups:new Set(current.map(r=>r.DisciplinePair)).size,normalizedGroups:pairs.size,total:[...pairs.values()].reduce((a,b)=>a+b,0)},flowRowsChecked:flows.length,calendarBoundaryCases:boundaryCases,referenceEdgeCases:5},null,2));

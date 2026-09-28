@@ -244,23 +244,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "5bd23e18047d324649e7",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "Metrics"
-              }
-            },
-            "Property": "Quality Action Required"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

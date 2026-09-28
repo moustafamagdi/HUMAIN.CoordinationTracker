@@ -5,7 +5,7 @@
     "x": 1334,
     "y": 317,
     "z": 10000,
-    "height": 110,
+    "height": 96,
     "width": 244
   },
   "visual": {
@@ -55,6 +55,13 @@
               }
             },
             "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            },
+            "labelPrecision": {
               "expr": {
                 "Literal": {
                   "Value": "0D"
@@ -143,7 +150,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'FORECAST · ACTIONABLE'"
+                  "Value": "'FORECAST · INCLUDES APPROVALS'"
                 }
               }
             },
@@ -161,7 +168,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "11D"
                 }
               }
             },

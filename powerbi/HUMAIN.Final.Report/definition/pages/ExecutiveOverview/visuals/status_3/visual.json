@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "status_3",
   "position": {
-    "x": 810,
-    "y": 440,
+    "x": 1072,
+    "y": 317,
     "z": 23000,
-    "height": 80,
+    "height": 96,
     "width": 244
   },
   "visual": {
@@ -22,11 +22,11 @@
                       "Entity": "Metrics"
                     }
                   },
-                  "Property": "Resolved Retained"
+                  "Property": "Net Reduction excl Approvals"
                 }
               },
-              "queryRef": "Metrics.Resolved Retained",
-              "nativeQueryRef": "Resolved Retained"
+              "queryRef": "Metrics.Net Reduction excl Approvals",
+              "nativeQueryRef": "Net Reduction excl Approvals"
             }
           ]
         }
@@ -40,8 +40,13 @@
               "solid": {
                 "color": {
                   "expr": {
-                    "Literal": {
-                      "Value": "'#42D3BC'"
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Metrics"
+                        }
+                      },
+                      "Property": "Net Reduction excl Approvals Color"
                     }
                   }
                 }
@@ -58,6 +63,13 @@
               "expr": {
                 "Literal": {
                   "Value": "1D"
+                }
+              }
+            },
+            "labelPrecision": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
                 }
               }
             }
@@ -143,7 +155,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'RESOLVED RETAINED'"
+                  "Value": "'NET REDUCTION · EXCL. APPROVALS'"
                 }
               }
             },
@@ -161,7 +173,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "11D"
                 }
               }
             },

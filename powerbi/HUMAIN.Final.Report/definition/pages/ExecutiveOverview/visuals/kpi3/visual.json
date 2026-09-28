@@ -5,7 +5,7 @@
     "x": 810,
     "y": 317,
     "z": 8000,
-    "height": 110,
+    "height": 96,
     "width": 244
   },
   "visual": {
@@ -60,6 +60,13 @@
               }
             },
             "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            },
+            "labelPrecision": {
               "expr": {
                 "Literal": {
                   "Value": "0D"
@@ -148,7 +155,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'NET ACTIONABLE REDUCTION'"
+                  "Value": "'NET REDUCTION · INCL. APPROVALS'"
                 }
               }
             },
@@ -166,7 +173,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "12D"
+                  "Value": "11D"
                 }
               }
             },

@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
   "name": "disciplines",
   "position": {
-    "x": 1066,
-    "y": 789,
+    "x": 940,
+    "y": 1080,
     "z": 2000,
-    "height": 250,
-    "width": 510
+    "height": 174,
+    "width": 636
   },
   "visual": {
     "visualType": "clusteredBarChart",

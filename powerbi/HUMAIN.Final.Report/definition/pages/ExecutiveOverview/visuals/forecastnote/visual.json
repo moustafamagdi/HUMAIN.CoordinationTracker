@@ -3,7 +3,7 @@
   "name": "forecastnote",
   "position": {
     "x": 24,
-    "y": 1080,
+    "y": 1292,
     "z": 4000,
     "height": 24,
     "width": 1552
@@ -18,7 +18,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Resolved = status changed to Resolved or GUID disappeared; later Compact adds zero. Forecast needs 3 dates and positive net actionable burn.",
+                    "value": "Forecast includes approvals and uses recent net actionable burn. Disappearance counts as resolution under project rules; verify complete exports.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "10pt",

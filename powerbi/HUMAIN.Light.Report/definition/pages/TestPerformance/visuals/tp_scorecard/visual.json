@@ -168,7 +168,7 @@
                     "Entity": "Metrics"
                   }
                 },
-                "Property": "Actionable Approved"
+                "Property": "Actionable Open"
               }
             },
             "direction": "Descending"

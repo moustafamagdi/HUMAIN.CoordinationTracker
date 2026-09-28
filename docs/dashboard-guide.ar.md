@@ -1,6 +1,6 @@
 # دليل قراءة HUMAIN Coordination Dashboard
 
-مرجع مطابق لتعريفات الـ Measures وتقارير Dark وLight المرفقة، بتاريخ 16 سبتمبر 2026. الأسماء التقنية بين الأقواس تسمح بمراجعة المعادلات في `powerbi/HUMAIN.SemanticModel/model.bim`.
+مرجع مطابق لتعريفات الـ Measures وتقارير Dark وLight المرفقة، بتاريخ 28 سبتمبر 2026. الأسماء التقنية بين الأقواس تسمح بمراجعة المعادلات في `powerbi/HUMAIN.SemanticModel/model.bim`.
 
 ## قبل قراءة أي رقم
 
@@ -22,15 +22,14 @@
 | ACTIONABLE OPEN / Open Clashes | رصيد Actionable في نهاية الفترة؛ يستبعد Approved وResolved ويشمل Reviewed والحالات غير المعروفة. | حجم الشغل الذي ما زال يحتاج إجراء تنسيق. |
 | NEW ACTIONABLE / New | مجموع NewActionable خلال الفترة، دون خط الأساس؛ لا يشمل أول ظهور بحالة Approved أو Resolved. | حجم العمل الجديد الداخل إلى القائمة، وليس إجمالي كل GUID جديد بأي حالة. |
 | RESOLVED · ALL / Resolved | مجموع Resolved خلال الفترة: بالـ Status أو الاختفاء. يشمل ما كان Approved قبل الحل. | حالات الحل المرصودة، وقد لا يساوي مقدار تقليل العمل المفتوح. |
-| NET ACTIONABLE REDUCTION / Net Reduction | ResolvedFromActionable + ApprovedFromActionable − NewActionable − ReturnedActionable. | الموجب تحسن صافٍ، السالب زيادة صافية، والصفر قد يخفي حركة كبيرة متعادلة. القبول يساهم في الانخفاض. |
+| NET REDUCTION · INCL. APPROVALS / Net Actionable Reduction | ResolvedFromActionable + ApprovedFromActionable − NewActionable − ReturnedActionable. | الموجب تحسن صافٍ، السالب زيادة صافية، والصفر قد يخفي حركة كبيرة متعادلة. القبول يساهم في الانخفاض. |
 | RESOLUTION RATE / Resolution Rate | ActionableResolved ÷ (ActionablePrevious + NewActionable + Returned to Action). تظهر فارغة إذا المقام صفر. | نسبة ما حُلّ من العمل المتاح للفترة؛ Approved لا يدخل البسط، وليست Resolved All ÷ Open الحالي. |
-| FORECAST · ACTIONABLE / Forecast Display | نهاية تقديرية = تاريخ آخر Snapshot + تقريب لأعلى لـ Actionable ÷ متوسط صافي الانخفاض اليومي. المتوسط يستخدم الفواصل المرصودة المنتهية في آخر 7 أيام ويقسم على مجموع مدتها الفعلية. | توقع نفاد قائمة العمل بنفس المعدل، ويشمل أثر Approved؛ ليس موعد تسليم معتمدًا. |
+| FORECAST · INCLUDES APPROVALS / Forecast Display | نهاية تقديرية = تاريخ آخر Snapshot + تقريب لأعلى لـ Actionable ÷ متوسط صافي الانخفاض اليومي. المتوسط يستخدم الفواصل المرصودة المنتهية في آخر 7 أيام ويقسم على مجموع مدتها الفعلية. | توقع نفاد قائمة العمل بنفس المعدل، ويشمل أثر Approved؛ ليس موعد تسليم معتمدًا. |
 | TOTAL CURRENT / Total Current | كل السجلات الموجودة فعليًا في Snapshot النهاية، بكل الحالات. | حجم سجل التصدير: Actionable + Approved + Resolved Retained. |
 | APPROVED · ACCEPTED / Approved Current | رصيد السجلات الموجودة حاليًا بحالة Approved. | تعارضات مقبولة تحتاج أن يكون قبولها مبررًا؛ ليست حلولًا هندسية. |
-| REVIEWED · STILL OPEN / Reviewed Current | رصيد Reviewed، وهو جزء من Actionable Open. | تمت مراجعتها ولكن المراجعة وحدها لا تقفلها. لا تضف الرقم إلى Open مرة ثانية. |
-| RESOLVED RETAINED / Resolved Retained | سجلات حالتها Resolved وما زالت موجودة في التصدير. | اتحلت بالفعل ولم تُحذف بالـ Compact؛ لا تحتسب مفتوحة. |
 | NEW APPROVALS / New Approvals | انتقالات مرصودة إلى Approved خلال الفترة؛ أول ظهور Approved ليس حركة قبول. | حجم تغييرات القبول في الفترة، وليس رصيد Approved الحالي. |
-| APPROVAL REVOKED / Approval Revoked | انتقال Approved إلى حالة Actionable خلال الفترة. | عمل عاد بعد إلغاء القبول؛ داخل Returned to Action بالفعل، فلا تضفه إليه مرة ثانية. |
+| NET REDUCTION · EXCL. APPROVALS / Net Reduction excl Approvals | صافي الانخفاض الكلي ناقص القبول من Actionable؛ يساوي الحل من المفتوح ناقص الجديد والعائد. | يفصل أثر القبول، لكنه لا يثبت حلًا هندسيًا؛ الحل ما زال يشمل اختفاء GUID. |
+| ACTIONABLE · LAST 7 DAYS / Actionable Change 7d | الرصيد عند Selected Snapshot ناقص الرصيد عند أحدث لقطة تسبقها بسبعة أيام أو أكثر. عند تاريخ أقصر تستخدم أول لقطة سابقة مع بيان المدة الحقيقية. | الموجب زيادة في العمل (أحمر)، والسالب انخفاض (أخضر). ليس هو مجموع الحركات في سلايسر Last 7 days. |
 
 ### رسائل Forecast
 
@@ -85,7 +84,7 @@ Improving + Increasing لا يلزم أن يساوي Tests in Scope؛ يوجد �
 
 ## Resolution & Approvals
 
-كل الكروت التالية حركات خلال الفترة من `OperationalProgress.csv`.
+كروت الحل والقبول والعائد حركات خلال الفترة من `OperationalProgress.csv`. نُقل إلى هذه الصفحة أيضًا كارد Reviewed Current وكارد Resolved Retained؛ كلاهما رصيد عند لقطة النهاية، لا حركة خلال الفترة. Approval Revoked موجود بالفعل ولم نكرر إضافته.
 
 | الكارد / Measure | التعريف | استخدامه |
 |---|---|---|
@@ -93,8 +92,8 @@ Improving + Increasing لا يلزم أن يساوي Tests in Scope؛ يوجد �
 | BY RESOLVED STATUS / Resolved By Status | حل مرصود بسبب التحول إلى Resolved. | الحل يسجل فورًا حتى دون Compact. |
 | BY DISAPPEARANCE / Resolved Disappeared | GUID غير محلول سابقًا اختفى من اللقطة التالية. | حل حسب قاعدة المشروع؛ تحقق من اكتمال التصدير قبل اعتباره إنجازًا. |
 | APPROVED FROM OPEN / Actionable Approved | انتقال Actionable إلى Approved. | خروج من قائمة العمل بالقبول، لا بالحل الهندسي. |
-| APPROVAL REVOKED / Approval Revoked | انتقال Approved إلى Actionable. | إلغاء قبول، وهو جزء من Returned. |
 | RETURNED TO ACTION / Returned to Action | رجوع GUID سابق إلى Actionable من حالة مقبولة أو مغلقة أو غياب سابق. | عمل عاد إلى القائمة؛ ليس بالضرورة رجوعًا من Resolved فقط. |
+| APPROVAL REVOKED / Approval Revoked | انتقال Approved إلى حالة Actionable خلال الفترة؛ داخل Returned to Action بالفعل. | عمل عاد بعد إلغاء القبول؛ لا تضفه مرة أخرى. |
 
 Resolved All = By Resolved Status + By Disappearance. أما مطابقة قائمة العمل فتستخدم **ResolvedFromActionable** فقط:
 
@@ -102,9 +101,16 @@ Resolved All = By Resolved Status + By Disappearance. أما مطابقة قائ
 
 لا تخصم Resolved All من المفتوح دون تمييز ما كان Approved سابقًا. GUID واحد قد يغلق ويعود ويغلق، فتعد الحركات أحداثًا متعددة وليست دائمًا عدد كلاشات فريدة خلال الفترة.
 
+### تفاصيل الأرصدة المنقولة من Executive Overview
+
+| الكارد / Measure | التعريف | القراءة |
+|---|---|---|
+| REVIEWED CLASHES · STILL OPEN / Reviewed Current | رصيد Reviewed، وهو جزء من Actionable Open. | تمت مراجعتها ولكن المراجعة وحدها لا تقفلها. لا تضف الرقم إلى Open مرة ثانية. |
+| RESOLVED RETAINED / Resolved Retained | سجلات حالتها Resolved وما زالت موجودة في التصدير. | اتحلت بالفعل ولم تُحذف بالـ Compact؛ لا تحتسب مفتوحة. |
+
 ### مثال توضيحي افتراضي
 
-بدأنا بـ 1,000 Actionable، دخل 100 جديد وعاد 20، حُلّ 150 من المفتوح وقُبل 30: النهائي 940، وصافي الانخفاض 60، ومعدل الحل 150 ÷ 1,120 = 13.39%. لو اتحل أيضًا 10 كانوا Approved من قبل، يظهر Resolved All = 160 دون خصم العشرة مرة ثانية من قائمة العمل.
+بدأنا بـ 1,000 Actionable، دخل 100 جديد وعاد 20، حُلّ 150 من المفتوح وقُبل 30: النهائي 940، وصافي الانخفاض 60، ومعدل الحل 150 ÷ 1,120 = 13.4%. لو اتحل أيضًا 10 كانوا Approved من قبل، يظهر Resolved All = 160 دون خصم العشرة مرة ثانية من قائمة العمل.
 
 ## Snapshot Quality
 
@@ -130,10 +136,10 @@ Quality Flags ليس مجموع باقي الكروت: صف واحد قد يفع
 | STOCK AS OF | تاريخ لقطة الرصيد المعروض؛ قد تسبق بداية الفترة عند عدم وجود تصدير جديد. |
 | Period Caption | الفترة التي تجمع حركاتها. اختيارات الفترة مستقلة بين الصفحات وليست متزامنة. |
 | AS OF في Aging/Details | آخر لقطة للبيانات الحالية؛ الصفحتان لا تعرضان رصيدًا تاريخيًا للفترة. |
-| Quality Banner | ملخص جودة للفترة على نطاق كل الاختبارات. No export يعني حركات صفر ورصيد آخر معلوم، لا إثبات عدم حدوث عمل. |
+| Quality Alerts Banner | ملخص جودة للفترة على نطاق كل الاختبارات. No export يعني حركات صفر ورصيد آخر معلوم، لا إثبات عدم حدوث عمل. |
 | Selected Test Caption | اسم الاختبار عند اختيار واحد، وإلا ALL SELECTED TESTS. |
 | Burndown / Open trend | رصيد Actionable لكل لقطة داخل الفترة. انخفاضه قد يأتي من حل أو قبول. |
-| New / Resolved trend | New Inflow يجمع الجديد والعائد؛ Resolved Trend يخص الحل من Actionable، وApproved Trend يخص القبول منه. |
+| Daily movement (Executive) | New Inflow يجمع الجديد والعائد؛ Resolved Trend يخص الحل من Actionable، وApproved Trend يخص القبول منه. تجمع الحركات حسب اليوم، بينما يظل Open Trend لكل لقطة دون تجميع أرصدة اليوم. |
 | Top Clash Tests | أعلى عشرة اختبارات في Actionable بنهاية الفترة داخل التحديد. |
 | Severity / Discipline Pair | توزيع الرصيد حسب تصنيف الاختبار وزوج التخصصات؛ ليس عدد عناصر BIM فريدة. |
 | Age distribution | توزيع أعمار العمل الحالي؛ اربطه بجدول أقدم الحالات. |
@@ -152,3 +158,29 @@ Quality Flags ليس مجموع باقي الكروت: صف واحد قد يفع
 ## تحديث 1.2: مراجعات الجودة
 
 Quality Flags يحتفظ بالتنبيهات الأصلية. Action Required يعرض ما لا يزال يحتاج إجراء، وAccepted Reviews يعرض المقبول، وNeeds Correction يعرض المطلوب تصحيحه. التوقع يستخدم RequiresAction في نافذته بدل العدد الخام للتنبيهات؛ باقي شروطه لم تتغير. التفاصيل في [دليل مراجعة الجودة](quality-reviews.ar.md).
+
+
+## تحديث 1.7: وضوح Executive Overview — 28 سبتمبر 2026
+
+تحديث للداشبورد فقط؛ نسخة Tracker تظل 1.6. لم يتغير منطق المقاييس القديمة أو توقع النهاية. الصف الأول يعرض Actionable Open، New، Resolved All، صافي الانخفاض شامل القبول، صافي الانخفاض بدون القبول، ثم Forecast بحجمه السابق أو أصغر. الصف الثاني يعرض Total Current، Approved Current، Resolution Rate، تغير الرصيد خلال نافذة السبعة أيام، وNew Approvals. تفاصيل Reviewed clashes وResolved Retained وApproval Revoked تُقرأ في Resolution & Approvals.
+
+كل أعداد الكروت معروضة كاملة بفواصل آلاف، ومعدل الحل بمنزلة عشرية واحدة. القبول بنفسجي منفصل عن لون العمل الجديد؛ Critical أحمر، Medium كهرماني، Low أزرق. Severity مشتق من اسم الاختبار وليس تقييمًا هندسيًا مستقلًا. أعلى عشرة اختبارات أصبحت جدولًا بمساحة أوسع للأسماء بدل أعمدة أفقية ذات أسماء مختصرة.
+
+| المقياس/التعليق الجديد | التعريف الدقيق |
+|---|---|
+| Net Reduction Split Caption | Resolved-driven = Actionable Resolved − New Actionable − Returned to Action؛ Approval-driven = Actionable Approved. مجموع الجزأين يساوي Net Actionable Reduction. الجزء الأول قد يكون سالبًا، وما زال يشمل الحل بالاختفاء. |
+| Resolved Split Caption | يقسم Resolved All إلى Resolved By Status وResolved Disappeared، مع فواصل آلاف. اختفاء GUID وفق قاعدة المشروع لا يثبت اكتمال التصدير. |
+| Actionable Comparison Snapshot 7d | أحدث لقطة عند أو قبل Selected Snapshot ناقص 7 أيام؛ عند عدم وجودها تستخدم أقدم لقطة أقدم من المختارة. لا لقطة مقارنة مع تاريخ فارغ أو لقطة وحيدة. |
+| Actionable Change 7d Caption | يبين تاريخ ووقت المرجع والفرق الفعلي بالأيام. Short history يعني أقل من 7 أيام؛ Snapshot gap يعني أن أقرب لقطة صالحة أقدم من النافذة المستهدفة. |
+| Actionable Change 7d Color / Light | زيادة الرصيد أحمر، انخفاضه أخضر، الصفر أو غياب المقارنة محايد. |
+| Net Reduction excl Approvals Color / Light | انخفاض صافي سلبي أحمر، وغير السالب أخضر. |
+| Custom Period Title، Custom Period Color / Light | عنوان ACTIVE ولون مميز فقط مع Custom period؛ غير ذلك INACTIVE ولون مكتوم. التحكم لا يختفي ولا يتعطل فعليًا، لكن قيمته لا تدخل الحسابات إلا في الوضع المخصص. |
+| Quality Alerts Banner | نفس قواعد الرسالة القديمة مع تسمية quality alerts صراحة. لا علاقة لها بعدد الكلاشات ذات Status = Reviewed. |
+
+**توحيد أزواج التخصصات:** جدول Tests يوحّد DisciplinePair بترتيب الاسمين أبجديًا بعد إزالة المسافات الطرفية وتحويلهما إلى حروف كبيرة؛ AR vs PL وPL vs AR يصبحان AR vs PL. DisciplineA وDisciplineB لم يتغيرا. تم التوحيد داخل Power Query للموديل؛ CSV القديمة لم تُكتب من جديد. السلايسرز تعتمد الحقل نفسه، بما فيها سلايسر الـ3D دون تغيير ملفات تلك الصفحة. اتجاه A/B داخل تفاصيل العنصر يظل محفوظًا. إجمالي الكلاشات لا يتغير.
+
+**الفوركاست:** عنوانه يذكر أنه يشمل القبول؛ لا يعتبر موعد إغلاق هندسي خالص. Engineering-only forecast متابعة مستقبلية، ولم يُنفذ في هذا التحديث.
+
+**مثال من البيانات المحلية وقت التحقق:** كل التاريخ يعطي صافي انخفاض 11,508 = 4,819 بدون القبول + 6,689 أثر القبول. Resolved All = 24,426 = 1,573 بالحالة + 22,853 بالاختفاء. الرصيد في 28 سبتمبر 13:06:05 هو 24,189 مقابل 22,568 في 21 سبتمبر 11:44:17؛ التغير +1,621. هذه نتائج وقتية وليست قيمًا ثابتة للكروت.
+
+تم تشغيل البناء و280 assertion للأداة، وفحوص JSON والعلاقات وربط الحقول والتطابق بين تخطيطَي الصفحتين المعدلتين، وفحص حسابي من CSV. لم نفتح Power BI Desktop لهذا التحديث؛ تنفيذ DAX وPower Query ومظهر النصوص والألوان يحتاجان فحصًا داخله قبل الدمج. راجع [نتائج المراجعة وقائمة الفحص](executive-review-2026-09-28.md) و[نص DAX الجديد بالكامل](executive-review-new-measures.dax).

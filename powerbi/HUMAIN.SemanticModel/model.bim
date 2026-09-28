@@ -1358,8 +1358,10 @@
               "expression": [
                 "let",
                 " Source = Table.SelectColumns(TestPerformance,{\"TestName\",\"Severity\",\"DisciplineA\",\"DisciplineB\",\"DisciplinePair\"}),",
-                " Unique = Table.Distinct(Source,{\"TestName\"})",
-                "in Unique"
+                " Unique = Table.Distinct(Source,{\"TestName\"}),",
+                " Normalized = Table.AddColumn(Unique,\"NormalizedPair\", each let a=Text.Upper(Text.Trim(if [DisciplineA]=null then \"\" else [DisciplineA])), b=Text.Upper(Text.Trim(if [DisciplineB]=null then \"\" else [DisciplineB])) in if a=\"\" or b=\"\" then [DisciplinePair] else Text.Combine(List.Sort({a,b},Comparer.Ordinal),\" vs \"), type text),",
+                " Result = Table.RenameColumns(Table.RemoveColumns(Normalized,{\"DisciplinePair\"}),{{\"NormalizedPair\",\"DisciplinePair\"}})",
+                "in Result"
               ],
               "type": "m"
             }
@@ -1495,7 +1497,7 @@
             "name": "Resolution Rate",
             "displayFolder": "Coordination workflow",
             "expression": "DIVIDE([Actionable Resolved],[Actionable Previous]+[New Actionable]+[Returned to Action])",
-            "formatString": "0.00%",
+            "formatString": "0.0%",
             "lineageTag": "2ef28e9f-a84e-44ca-8d1f-d06ab4142f56"
           },
           {
@@ -2051,6 +2053,79 @@
             "displayFolder": "3D Explorer",
             "expression": "IF([3D Selection Ready] = 1, COALESCE(CALCULATE(SELECTEDVALUE(Clash3DGeometry[SourceFile]), Clash3DGeometry[Side] = \"B\"), \"No matched element\"), \"Select one clash\")",
             "lineageTag": "87a9d11f-51fe-4b96-970f-52862904a368"
+          },
+          {
+            "name": "Net Reduction excl Approvals",
+            "expression": "[Net Actionable Reduction] - [Actionable Approved]",
+            "displayFolder": "Executive review 2026-09-28",
+            "formatString": "#,0;-#,0;0"
+          },
+          {
+            "name": "Net Reduction Split Caption",
+            "expression": "VAR engineering = [Actionable Resolved] - [New Actionable] - [Returned to Action] RETURN \"Resolved-driven: \" & FORMAT(engineering,\"#,0;-#,0;0\") & \" | Approval-driven: \" & FORMAT([Actionable Approved],\"#,0\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Resolved Split Caption",
+            "expression": "\"By status: \" & FORMAT([Resolved By Status],\"#,0\") & UNICHAR(10) & \"By disappearance: \" & FORMAT([Resolved Disappeared],\"#,0\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Actionable Comparison Snapshot 7d",
+            "expression": "VAR s = [Selected Snapshot]\nVAR prior = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s-7)\nVAR earliest = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s)\nRETURN IF(NOT ISBLANK(s), IF(NOT ISBLANK(prior), prior, IF(earliest < s, earliest)))",
+            "displayFolder": "Executive review 2026-09-28",
+            "formatString": "dd MMM yyyy HH:mm"
+          },
+          {
+            "name": "Actionable Change 7d",
+            "expression": "VAR reference = [Actionable Comparison Snapshot 7d]\nVAR opening = CALCULATE(SUM(OperationalProgress[Actionable]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] = reference)\nRETURN IF(NOT ISBLANK(reference), [Actionable Open] - COALESCE(opening,0))",
+            "displayFolder": "Executive review 2026-09-28",
+            "formatString": "+#,0;-#,0;0"
+          },
+          {
+            "name": "Actionable Change 7d Caption",
+            "expression": "VAR s = [Selected Snapshot]\nVAR reference = [Actionable Comparison Snapshot 7d]\nVAR days = s-reference\nRETURN IF(ISBLANK(reference), \"No earlier snapshot\", \"vs \" & FORMAT(reference,\"dd MMM yyyy HH:mm\") & \" | \" & FORMAT(days,\"0.0\") & \" days\" & IF(days<7,\" (short history)\",IF(days>7.01,\" (snapshot gap)\",\"\")))",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Actionable Change 7d Color",
+            "expression": "VAR delta = [Actionable Change 7d] RETURN SWITCH(TRUE(),ISBLANK(delta) || delta=0,\"#A4B7CA\",delta>0,\"#EF7181\",\"#42D3BC\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Net Reduction excl Approvals Color",
+            "expression": "IF([Net Reduction excl Approvals]<0,\"#EF7181\",\"#42D3BC\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Custom Period Color",
+            "expression": "IF(SELECTEDVALUE(ReportingPeriod[Mode],\"All history\")=\"Custom period\",\"#42D3BC\",\"#A4B7CA\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Actionable Change 7d Color Light",
+            "expression": "VAR delta = [Actionable Change 7d] RETURN SWITCH(TRUE(),ISBLANK(delta) || delta=0,\"#52657B\",delta>0,\"#C33D55\",\"#087F75\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Net Reduction excl Approvals Color Light",
+            "expression": "IF([Net Reduction excl Approvals]<0,\"#C33D55\",\"#087F75\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Custom Period Color Light",
+            "expression": "IF(SELECTEDVALUE(ReportingPeriod[Mode],\"All history\")=\"Custom period\",\"#087F75\",\"#52657B\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Custom Period Title",
+            "expression": "IF(SELECTEDVALUE(ReportingPeriod[Mode],\"All history\")=\"Custom period\",\"Date range | ACTIVE for Custom period\",\"Date range | INACTIVE - used only for Custom period\")",
+            "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Quality Alerts Banner",
+            "expression": "VAR flags = CALCULATE([Quality Flags],REMOVEFILTERS(Tests)) VAR pending = CALCULATE([Quality Action Required],REMOVEFILTERS(Tests)) RETURN IF([Period Snapshots]=0,\"NO EXPORT IN PERIOD | Movement = 0; stock is last known. Check snapshot date.\",IF(pending>0,\"QUALITY ALERTS | \" & FORMAT(pending,\"0\") & \" quality alerts require action. Review in Tracker.\",IF(flags>0,\"QUALITY ALERTS REVIEWED | \" & FORMAT(flags,\"0\") & \" original quality alerts retained; none require action in period.\",\"QUALITY CHECK | No rule triggered; export completeness is not guaranteed.\")))",
+            "displayFolder": "Executive review 2026-09-28"
           }
         ],
         "partitions": [

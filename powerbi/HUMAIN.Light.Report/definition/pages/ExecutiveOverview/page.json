@@ -3,7 +3,7 @@
   "name": "ExecutiveOverview",
   "displayName": "Executive Overview",
   "displayOption": "FitToPage",
-  "height": 1110,
+  "height": 1330,
   "width": 1600,
   "objects": {
     "background": [
