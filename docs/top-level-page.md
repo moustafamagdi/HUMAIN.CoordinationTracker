@@ -15,7 +15,6 @@ Added 28 September 2026 to the Light and Dark reports, alongside Executive Overv
 | + New & Returning Clashes | New actionable work plus work returned to action since tracking began | 18,317 |
 | − Recorded Resolutions | Resolution transitions from actionable work, including disappeared records | 23,136 |
 | − Accepted Clashes | Actionable work moved to Approved | 6,689 |
-| Recent Increase | Current open minus the seven-day reference stock | +1,621 |
 
 The balance is displayed explicitly:
 
@@ -25,14 +24,14 @@ Movement counts are recorded transitions, not necessarily unique clashes: the sa
 
 **32.2% is a reduction in the open work list, not project completion or verified engineering progress.** Acceptance contributes to it. “Recorded as resolved” includes records absent from the next export, following the existing project rule. The page explains both limitations visibly.
 
-When open work exceeds its starting value, the change/rate titles switch to “Net Increase” and “Increase %,” with warning color. The amount and percentage show the magnitude, with direction stated by their titles. With zero starting work the percentage is blank and its caption explains why. The recent-change card retains a signed value and includes both stock values and its actual comparison duration; its reference rules are the same as Executive Overview.
+When open work exceeds its starting value, the change/rate titles switch to “Net Increase” and “Increase %,” with warning color. The amount and percentage show the magnitude, with direction stated by their titles. With zero starting work the percentage is blank and its caption explains why. The recent-change card is omitted from Top Level. The full-width outstanding-clash trend shows changes over time; the detailed comparison remains in Executive Overview.
 
 All percentage inputs appear on the page, counts use full numbers, and there is only one percentage. The chart cannot filter the headline cards. Data-review alerts produce a provisional-progress note. Otherwise the footer explains the disappearance rule and the distinction from construction completion.
 
 ## Implementation and validation
 
 - Twenty-three additive measures in the shared model, under display folder `Top Level`; existing measure expressions are not changed. See [exact DAX](top-level-measures.dax).
-- Twenty-four visuals in each report's `definition/pages/TopLevel`, registered after Executive Overview.
+- Twenty-two visuals in each report's `definition/pages/TopLevel`, registered after Executive Overview.
 - Live Desktop engine evaluated all 23 measures as Ready without errors. The current balance, percentage and recent comparison were queried and reconciled.
 - A live query with Custom period, September 13 and Critical severity filters still returned the intended whole-project values: 35,697, 24,189 and 32.238003…%.
 - Static parsing, field bindings, canvas bounds, non-overlap and theme-normalized Dark/Light parity are checked by `node tools/validate-top-level.mjs`.
@@ -41,3 +40,5 @@ All percentage inputs appear on the page, counts use full numbers, and there is 
 The examples are from the locally available September 28 exports; they are not constants embedded in DAX. No Tracker or CSV changes are required.
 
 Display-label update: the management page uses Clash/Clashes, with plain-language captions. Recorded Resolutions retains the distinction between recorded resolution and independently verified completion. Only display strings changed; numeric calculations are unchanged.
+
+Layout update, 28 September 2026: removed the recent-change card and its caption; expanded the trend to the full content width. Existing measures are retained for compatibility. Static validation was rerun; the revised layout still needs a Desktop visual check.

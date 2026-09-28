@@ -32,7 +32,7 @@ const definitions = reports.map(report => {
   const page = read(path.join(root, 'TopLevel/page.json'));
   const folder = path.join(root, 'TopLevel/visuals');
   const visuals = fs.readdirSync(folder).sort().map(n => read(path.join(folder, n, 'visual.json')));
-  assert.equal(visuals.length, 24);
+  assert.equal(visuals.length, 22);
   const names = new Set(visuals.map(v => v.name));
   for (const interaction of page.visualInteractions) {
     assert(names.has(interaction.source) && names.has(interaction.target));
@@ -52,4 +52,4 @@ const definitions = reports.map(report => {
 });
 assert.deepEqual(normalize(definitions[0]), normalize(definitions[1]), 'Dark/Light parity');
 assert.equal(tables.get('Metrics').measures.filter(m => m.name.startsWith('Top Level ')).length, 23);
-console.log(JSON.stringify({visuals: 48, bindings, measures: 23, bounds: 'passed', overlap: 'none', parity: 'passed'}, null, 2));
+console.log(JSON.stringify({visuals: 44, bindings, measures: 23, bounds: 'passed', overlap: 'none', parity: 'passed'}, null, 2));

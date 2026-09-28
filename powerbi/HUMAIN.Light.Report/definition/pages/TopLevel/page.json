@@ -134,16 +134,6 @@
     },
     {
       "source": "tl_trend",
-      "target": "tl_recent",
-      "type": "NoFilter"
-    },
-    {
-      "source": "tl_trend",
-      "target": "tl_recent_note",
-      "type": "NoFilter"
-    },
-    {
-      "source": "tl_trend",
       "target": "tl_data_note",
       "type": "NoFilter"
     }
