@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Requires action at the latest export.",
+                    "value": "Clashes that still need action.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",

@@ -32,15 +32,15 @@ DIVIDE([Top Level Change Amount], [Top Level Start])
 
 -- Top Level Change Title
 Top Level Change Title =
-IF([Top Level Net Reduction] < 0, "MORE OPEN THAN AT START", "FEWER OPEN THAN AT START")
+IF([Top Level Net Reduction] < 0, "NET INCREASE", "NET REDUCTION")
 
 -- Top Level Rate Title
 Top Level Rate Title =
-IF([Top Level Net Reduction] < 0, "INCREASE FROM START", "REDUCTION FROM START")
+IF([Top Level Net Reduction] < 0, "INCREASE %", "REDUCTION %")
 
 -- Top Level Rate Caption
 Top Level Rate Caption =
-IF(ISBLANK([Top Level Reduction Rate]), "No starting work: percentage unavailable", FORMAT([Top Level Change Amount],"#,0") & " / " & FORMAT([Top Level Start],"#,0") & " = " & FORMAT([Top Level Reduction Rate],"0.0%"))
+IF(ISBLANK([Top Level Reduction Rate]), "No initial clashes: percentage unavailable", FORMAT([Top Level Change Amount],"#,0") & " / " & FORMAT([Top Level Start],"#,0") & " = " & FORMAT([Top Level Reduction Rate],"0.0%"))
 
 -- Top Level Window Caption
 Top Level Window Caption =
@@ -48,11 +48,11 @@ VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTER
 
 -- Top Level Start Caption
 Top Level Start Caption =
-VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(NOT ISBLANK(startSnapshotTime), "First tracked snapshot: " & FORMAT(startSnapshotTime,"dd MMM yyyy"), "No starting snapshot")
+VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(NOT ISBLANK(startSnapshotTime), "First recorded: " & FORMAT(startSnapshotTime,"dd MMM yyyy"), "No starting record")
 
 -- Top Level Balance Caption
 Top Level Balance Caption =
-VAR closingBalance = [Top Level Start]+[Top Level Added]-[Top Level Resolved]-[Top Level Accepted] RETURN IF(ISBLANK([Top Level Open]), "No snapshots available", IF(closingBalance <> [Top Level Open], "Balance needs review: check export scope before reporting progress.", FORMAT([Top Level Start],"#,0") & " + " & FORMAT([Top Level Added],"#,0") & " - " & FORMAT([Top Level Resolved],"#,0") & " - " & FORMAT([Top Level Accepted],"#,0") & " = " & FORMAT([Top Level Open],"#,0") & " open now"))
+VAR closingBalance = [Top Level Start]+[Top Level Added]-[Top Level Resolved]-[Top Level Accepted] RETURN IF(ISBLANK([Top Level Open]), "No snapshots available", IF(closingBalance <> [Top Level Open], "Balance needs review: check export scope before reporting progress.", FORMAT([Top Level Start],"#,0") & " + " & FORMAT([Top Level Added],"#,0") & " - " & FORMAT([Top Level Resolved],"#,0") & " - " & FORMAT([Top Level Accepted],"#,0") & " = " & FORMAT([Top Level Open],"#,0") & " outstanding clashes"))
 
 -- Top Level Recent Change | Format: +#,0;-#,0;0
 Top Level Recent Change =
@@ -60,7 +60,7 @@ CALCULATE([Actionable Change 7d], REMOVEFILTERS())
 
 -- Top Level Recent Title
 Top Level Recent Title =
-VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount),"NO RECENT COMPARISON",changeAmount>0,"MORE OPEN RECENTLY",changeAmount<0,"FEWER OPEN RECENTLY","NO RECENT CHANGE")
+VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount),"NO RECENT COMPARISON",changeAmount>0,"RECENT INCREASE",changeAmount<0,"RECENT DECREASE","NO RECENT CHANGE")
 
 -- Top Level Recent Caption
 Top Level Recent Caption =
@@ -88,4 +88,4 @@ CALCULATE(SUM(OperationalProgress[Actionable]), REMOVEFILTERS(Tests), REMOVEFILT
 
 -- Top Level Data Note
 Top Level Data Note =
-VAR pendingAlerts = CALCULATE([Quality Action Required], REMOVEFILTERS()) RETURN IF(pendingAlerts>0,"DATA REVIEW: " & FORMAT(pendingAlerts,"#,0") & " alerts need attention. Treat progress as provisional.","DATA NOTE: Resolved includes items missing from the next export. This is a work-list reduction, not verified construction completion.")
+VAR pendingAlerts = CALCULATE([Quality Action Required], REMOVEFILTERS()) RETURN IF(pendingAlerts>0,"DATA REVIEW: " & FORMAT(pendingAlerts,"#,0") & " alerts need attention. Treat progress as provisional.","DATA NOTE: Resolutions include clashes no longer listed. This reduction includes acceptances and is not verified project completion.")

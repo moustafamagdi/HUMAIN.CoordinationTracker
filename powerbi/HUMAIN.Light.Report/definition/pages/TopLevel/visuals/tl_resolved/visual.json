@@ -151,7 +151,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'- RECORDED AS RESOLVED'"
+                  "Value": "'- RECORDED RESOLUTIONS'"
                 }
               }
             },

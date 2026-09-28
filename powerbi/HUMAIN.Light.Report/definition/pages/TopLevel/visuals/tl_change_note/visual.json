@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Includes resolved + accepted work.",
+                    "value": "Includes resolved + accepted clashes.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "13pt",

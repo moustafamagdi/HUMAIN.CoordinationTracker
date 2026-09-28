@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Coordination at a glance  |  Open = still needs action. Accepted and resolved items are excluded.",
+                    "value": "Clashes at a glance  |  Outstanding clashes need action. Accepted and resolved clashes are excluded.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "16pt",

@@ -151,7 +151,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'OPEN AT TRACKING START'"
+                  "Value": "'INITIAL CLASHES'"
                 }
               }
             },

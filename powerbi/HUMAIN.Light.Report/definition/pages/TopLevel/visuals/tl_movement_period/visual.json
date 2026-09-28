@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "All movements since tracking started",
+                    "value": "All changes since tracking started",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "14pt",

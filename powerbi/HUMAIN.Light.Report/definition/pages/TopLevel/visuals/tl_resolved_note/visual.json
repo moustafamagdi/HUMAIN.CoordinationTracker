@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "Status changed to resolved, or record disappeared.",
+                    "value": "Recorded as resolved or no longer listed.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "14pt",

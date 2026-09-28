@@ -19,7 +19,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "New issues + issues returned to action.",
+                    "value": "New clashes + clashes requiring action again.",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
                       "fontSize": "14pt",

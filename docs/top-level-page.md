@@ -4,18 +4,18 @@ Added 28 September 2026 to the Light and Dark reports, alongside Executive Overv
 
 ## Reading the page
 
-“Open” means work still requiring coordination action. Accepted and resolved records are excluded. The page always covers the whole project from its first tracked snapshot to its latest export. It has no slicers. Its headline measures deliberately ignore period and discipline filters; the trend retains its snapshot axis. This prevents the starting amount and the reported reduction from changing meaning when another report page is filtered.
+“Outstanding clashes” means clashes still requiring action. Accepted and resolved records are excluded. The page always covers the whole project from its first tracked snapshot to its latest export. It has no slicers. Its headline measures deliberately ignore period and discipline filters; the trend retains its snapshot axis. This prevents the starting amount and the reported reduction from changing meaning when another report page is filtered.
 
 | Display | Definition | Current example |
 |---|---|---:|
-| Open at tracking start | Actionable work in the first tracked snapshot | 35,697 |
-| Open now | Actionable work in the latest snapshot | 24,189 |
-| Fewer open than at start | Starting open minus current open | 11,508 |
-| Reduction from start | Reduction divided by starting open | 11,508 / 35,697 = 32.2% |
-| + Work added | New actionable work plus work returned to action since tracking began | 18,317 |
-| − Recorded as resolved | Resolution transitions from actionable work, including disappeared records | 23,136 |
-| − Accepted | Actionable work moved to Approved | 6,689 |
-| More open recently | Current open minus the seven-day reference stock | +1,621 |
+| Initial Clashes | Actionable work in the first tracked snapshot | 35,697 |
+| Clashes Requiring Action | Actionable work in the latest snapshot | 24,189 |
+| Net Reduction | Starting open minus current open | 11,508 |
+| Reduction % | Reduction divided by starting open | 11,508 / 35,697 = 32.2% |
+| + New & Returning Clashes | New actionable work plus work returned to action since tracking began | 18,317 |
+| − Recorded Resolutions | Resolution transitions from actionable work, including disappeared records | 23,136 |
+| − Accepted Clashes | Actionable work moved to Approved | 6,689 |
+| Recent Increase | Current open minus the seven-day reference stock | +1,621 |
 
 The balance is displayed explicitly:
 
@@ -25,7 +25,7 @@ Movement counts are recorded transitions, not necessarily unique clashes: the sa
 
 **32.2% is a reduction in the open work list, not project completion or verified engineering progress.** Acceptance contributes to it. “Recorded as resolved” includes records absent from the next export, following the existing project rule. The page explains both limitations visibly.
 
-When open work exceeds its starting value, the change/rate titles switch to “More open than at start” and “Increase from start,” with warning color. The amount and percentage show the magnitude, with direction stated by their titles. With zero starting work the percentage is blank and its caption explains why. The recent-change card retains a signed value and includes both stock values and its actual comparison duration; its reference rules are the same as Executive Overview.
+When open work exceeds its starting value, the change/rate titles switch to “Net Increase” and “Increase %,” with warning color. The amount and percentage show the magnitude, with direction stated by their titles. With zero starting work the percentage is blank and its caption explains why. The recent-change card retains a signed value and includes both stock values and its actual comparison duration; its reference rules are the same as Executive Overview.
 
 All percentage inputs appear on the page, counts use full numbers, and there is only one percentage. The chart cannot filter the headline cards. Data-review alerts produce a provisional-progress note. Otherwise the footer explains the disappearance rule and the distinction from construction completion.
 
@@ -39,3 +39,5 @@ All percentage inputs appear on the page, counts use full numbers, and there is 
 - Both Light and Dark pages were opened and inspected in Desktop; clipped captions were shortened and the heading height increased. The shared on-disk expressions were compared with the validated live definitions after saving.
 
 The examples are from the locally available September 28 exports; they are not constants embedded in DAX. No Tracker or CSV changes are required.
+
+Display-label update: the management page uses Clash/Clashes, with plain-language captions. Recorded Resolutions retains the distinction between recorded resolution and independently verified completion. Only display strings changed; numeric calculations are unchanged.

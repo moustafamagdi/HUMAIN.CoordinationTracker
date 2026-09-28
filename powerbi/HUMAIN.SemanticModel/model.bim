@@ -2177,17 +2177,17 @@
           },
           {
             "name": "Top Level Change Title",
-            "expression": "IF([Top Level Net Reduction] < 0, \"MORE OPEN THAN AT START\", \"FEWER OPEN THAN AT START\")",
+            "expression": "IF([Top Level Net Reduction] < 0, \"NET INCREASE\", \"NET REDUCTION\")",
             "displayFolder": "Top Level"
           },
           {
             "name": "Top Level Rate Title",
-            "expression": "IF([Top Level Net Reduction] < 0, \"INCREASE FROM START\", \"REDUCTION FROM START\")",
+            "expression": "IF([Top Level Net Reduction] < 0, \"INCREASE %\", \"REDUCTION %\")",
             "displayFolder": "Top Level"
           },
           {
             "name": "Top Level Rate Caption",
-            "expression": "IF(ISBLANK([Top Level Reduction Rate]), \"No starting work: percentage unavailable\", FORMAT([Top Level Change Amount],\"#,0\") & \" / \" & FORMAT([Top Level Start],\"#,0\") & \" = \" & FORMAT([Top Level Reduction Rate],\"0.0%\"))",
+            "expression": "IF(ISBLANK([Top Level Reduction Rate]), \"No initial clashes: percentage unavailable\", FORMAT([Top Level Change Amount],\"#,0\") & \" / \" & FORMAT([Top Level Start],\"#,0\") & \" = \" & FORMAT([Top Level Reduction Rate],\"0.0%\"))",
             "displayFolder": "Top Level"
           },
           {
@@ -2197,12 +2197,12 @@
           },
           {
             "name": "Top Level Start Caption",
-            "expression": "VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(NOT ISBLANK(startSnapshotTime), \"First tracked snapshot: \" & FORMAT(startSnapshotTime,\"dd MMM yyyy\"), \"No starting snapshot\")",
+            "expression": "VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(NOT ISBLANK(startSnapshotTime), \"First recorded: \" & FORMAT(startSnapshotTime,\"dd MMM yyyy\"), \"No starting record\")",
             "displayFolder": "Top Level"
           },
           {
             "name": "Top Level Balance Caption",
-            "expression": "VAR closingBalance = [Top Level Start]+[Top Level Added]-[Top Level Resolved]-[Top Level Accepted] RETURN IF(ISBLANK([Top Level Open]), \"No snapshots available\", IF(closingBalance <> [Top Level Open], \"Balance needs review: check export scope before reporting progress.\", FORMAT([Top Level Start],\"#,0\") & \" + \" & FORMAT([Top Level Added],\"#,0\") & \" - \" & FORMAT([Top Level Resolved],\"#,0\") & \" - \" & FORMAT([Top Level Accepted],\"#,0\") & \" = \" & FORMAT([Top Level Open],\"#,0\") & \" open now\"))",
+            "expression": "VAR closingBalance = [Top Level Start]+[Top Level Added]-[Top Level Resolved]-[Top Level Accepted] RETURN IF(ISBLANK([Top Level Open]), \"No snapshots available\", IF(closingBalance <> [Top Level Open], \"Balance needs review: check export scope before reporting progress.\", FORMAT([Top Level Start],\"#,0\") & \" + \" & FORMAT([Top Level Added],\"#,0\") & \" - \" & FORMAT([Top Level Resolved],\"#,0\") & \" - \" & FORMAT([Top Level Accepted],\"#,0\") & \" = \" & FORMAT([Top Level Open],\"#,0\") & \" outstanding clashes\"))",
             "displayFolder": "Top Level"
           },
           {
@@ -2213,7 +2213,7 @@
           },
           {
             "name": "Top Level Recent Title",
-            "expression": "VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount),\"NO RECENT COMPARISON\",changeAmount>0,\"MORE OPEN RECENTLY\",changeAmount<0,\"FEWER OPEN RECENTLY\",\"NO RECENT CHANGE\")",
+            "expression": "VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount),\"NO RECENT COMPARISON\",changeAmount>0,\"RECENT INCREASE\",changeAmount<0,\"RECENT DECREASE\",\"NO RECENT CHANGE\")",
             "displayFolder": "Top Level"
           },
           {
@@ -2249,7 +2249,7 @@
           },
           {
             "name": "Top Level Data Note",
-            "expression": "VAR pendingAlerts = CALCULATE([Quality Action Required], REMOVEFILTERS()) RETURN IF(pendingAlerts>0,\"DATA REVIEW: \" & FORMAT(pendingAlerts,\"#,0\") & \" alerts need attention. Treat progress as provisional.\",\"DATA NOTE: Resolved includes items missing from the next export. This is a work-list reduction, not verified construction completion.\")",
+            "expression": "VAR pendingAlerts = CALCULATE([Quality Action Required], REMOVEFILTERS()) RETURN IF(pendingAlerts>0,\"DATA REVIEW: \" & FORMAT(pendingAlerts,\"#,0\") & \" alerts need attention. Treat progress as provisional.\",\"DATA NOTE: Resolutions include clashes no longer listed. This reduction includes acceptances and is not verified project completion.\")",
             "displayFolder": "Top Level"
           }
         ],
