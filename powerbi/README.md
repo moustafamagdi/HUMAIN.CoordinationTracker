@@ -12,6 +12,8 @@ Open `HUMAIN Dashboard.pbip` for Dark or `HUMAIN Dashboard - Light.pbip` for Lig
 
 The shared model now imports Speckle data, so opening this complete version requires the connector. The earlier six-page version remains in Git history before this dashboard synchronization.
 
+If CSV cards work but 3D remains empty, check **SpeckleModelUrl** as well as SourceFolder: changing the CSV folder does not configure the model URL. After setting the real URL, refresh Objects and SpeckleElements (or Refresh the report), then select one clash in the 3D register. No-selection placeholders are expected. Local connection parameters and authentication should not be committed to the distribution copy.
+
 ## Pages
 
 1. Executive Overview

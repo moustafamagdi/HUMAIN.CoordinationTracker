@@ -14,8 +14,8 @@ Resolved Split Caption =
 Actionable Comparison Snapshot 7d =
 VAR s = [Selected Snapshot]
 VAR prior = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s-7)
-VAR earliest = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s)
-RETURN IF(NOT ISBLANK(s), IF(NOT ISBLANK(prior), prior, IF(earliest < s, earliest)))
+VAR firstSnapshot = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s)
+RETURN IF(NOT ISBLANK(s), IF(NOT ISBLANK(prior), prior, IF(firstSnapshot < s, firstSnapshot)))
 
 -- Actionable Change 7d | Format: +#,0;-#,0;0
 Actionable Change 7d =

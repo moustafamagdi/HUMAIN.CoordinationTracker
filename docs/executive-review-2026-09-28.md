@@ -1,5 +1,15 @@
 # Executive Overview review implementation — 2026-09-28
 
+## Desktop follow-up repair — 2026-09-28
+
+The initial static checks below did not detect a DAX parser error: `earliest` is a reserved DAX function name and cannot be used as the comparison measure's variable. Renamed that variable to `firstSnapshot`, preserving the calculation. The shared measure was repaired in the running Desktop model and in source, so both reports receive the correction.
+
+Live Desktop engine validation now returns reference `2026-09-21 11:44:17`, change `+1,621`, the elapsed-window caption and Light color `#C33D55`. All five seven-day measures report Ready with no error message. The Light Executive card and caption were visually checked and display successfully.
+
+The local Speckle connection still had the repository's `YOUR_PROJECT_ID/models/YOUR_MODEL_ID` placeholder. Configured the user's existing project locally and refreshed Objects/SpeckleElements successfully: 388,263 rows in each table and 110,169 matched geometry rows. Selecting a clash in the Light report loaded and rendered its 3D geometry. Current coverage is 29,002 of 30,192 clash records (96.1%); this is a point-in-time matching result, not a connection failure. No account state or local dataset is added to the repository. Other visual/runtime checks in the original checklist remain outstanding unless explicitly described above.
+
+The sections below record the original implementation and its initial validation limits.
+
 Implemented on `improve/executive-overview-review`, based on `64daf88`, for review before merging. Power BI Desktop was not opened. No snapshot/CSV, Tracker source/export format, 3D Explorer definition or Speckle resource was changed.
 
 ## Files by review item

@@ -2072,7 +2072,7 @@
           },
           {
             "name": "Actionable Comparison Snapshot 7d",
-            "expression": "VAR s = [Selected Snapshot]\nVAR prior = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s-7)\nVAR earliest = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s)\nRETURN IF(NOT ISBLANK(s), IF(NOT ISBLANK(prior), prior, IF(earliest < s, earliest)))",
+            "expression": "VAR s = [Selected Snapshot]\nVAR prior = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s-7)\nVAR firstSnapshot = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS(Snapshots), Snapshots[SnapshotDateTime] <= s)\nRETURN IF(NOT ISBLANK(s), IF(NOT ISBLANK(prior), prior, IF(firstSnapshot < s, firstSnapshot)))",
             "displayFolder": "Executive review 2026-09-28",
             "formatString": "dd MMM yyyy HH:mm"
           },
