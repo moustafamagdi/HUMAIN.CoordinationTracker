@@ -1,0 +1,91 @@
+-- Top Level Start | Format: #,0
+Top Level Start =
+CALCULATE([Actionable Previous], REMOVEFILTERS())
+
+-- Top Level Open | Format: #,0
+Top Level Open =
+CALCULATE([Actionable Open], REMOVEFILTERS())
+
+-- Top Level Added | Format: #,0
+Top Level Added =
+CALCULATE([New Actionable] + [Returned to Action], REMOVEFILTERS())
+
+-- Top Level Resolved | Format: #,0
+Top Level Resolved =
+CALCULATE([Actionable Resolved], REMOVEFILTERS())
+
+-- Top Level Accepted | Format: #,0
+Top Level Accepted =
+CALCULATE([Actionable Approved], REMOVEFILTERS())
+
+-- Top Level Net Reduction | Format: #,0
+Top Level Net Reduction =
+[Top Level Start] - [Top Level Open]
+
+-- Top Level Change Amount | Format: #,0
+Top Level Change Amount =
+ABS([Top Level Net Reduction])
+
+-- Top Level Reduction Rate | Format: 0.0%
+Top Level Reduction Rate =
+DIVIDE([Top Level Change Amount], [Top Level Start])
+
+-- Top Level Change Title
+Top Level Change Title =
+IF([Top Level Net Reduction] < 0, "MORE OPEN THAN AT START", "FEWER OPEN THAN AT START")
+
+-- Top Level Rate Title
+Top Level Rate Title =
+IF([Top Level Net Reduction] < 0, "INCREASE FROM START", "REDUCTION FROM START")
+
+-- Top Level Rate Caption
+Top Level Rate Caption =
+IF(ISBLANK([Top Level Reduction Rate]), "No starting work: percentage unavailable", FORMAT([Top Level Change Amount],"#,0") & " / " & FORMAT([Top Level Start],"#,0") & " = " & FORMAT([Top Level Reduction Rate],"0.0%"))
+
+-- Top Level Window Caption
+Top Level Window Caption =
+VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) VAR endSnapshotTime = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(ISBLANK(endSnapshotTime), "No snapshots available", "WHOLE PROJECT  |  " & FORMAT(startSnapshotTime,"dd MMM yyyy") & " - " & FORMAT(endSnapshotTime,"dd MMM yyyy") & "  |  Updated " & FORMAT(endSnapshotTime,"HH:mm"))
+
+-- Top Level Start Caption
+Top Level Start Caption =
+VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(NOT ISBLANK(startSnapshotTime), "First tracked snapshot: " & FORMAT(startSnapshotTime,"dd MMM yyyy"), "No starting snapshot")
+
+-- Top Level Balance Caption
+Top Level Balance Caption =
+VAR closingBalance = [Top Level Start]+[Top Level Added]-[Top Level Resolved]-[Top Level Accepted] RETURN IF(ISBLANK([Top Level Open]), "No snapshots available", IF(closingBalance <> [Top Level Open], "Balance needs review: check export scope before reporting progress.", FORMAT([Top Level Start],"#,0") & " + " & FORMAT([Top Level Added],"#,0") & " - " & FORMAT([Top Level Resolved],"#,0") & " - " & FORMAT([Top Level Accepted],"#,0") & " = " & FORMAT([Top Level Open],"#,0") & " open now"))
+
+-- Top Level Recent Change | Format: +#,0;-#,0;0
+Top Level Recent Change =
+CALCULATE([Actionable Change 7d], REMOVEFILTERS())
+
+-- Top Level Recent Title
+Top Level Recent Title =
+VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount),"NO RECENT COMPARISON",changeAmount>0,"MORE OPEN RECENTLY",changeAmount<0,"FEWER OPEN RECENTLY","NO RECENT CHANGE")
+
+-- Top Level Recent Caption
+Top Level Recent Caption =
+VAR changeAmount = [Top Level Recent Change] VAR referenceDate = CALCULATE([Actionable Comparison Snapshot 7d],REMOVEFILTERS()) VAR endSnapshotTime = CALCULATE(MAX(Snapshots[SnapshotDateTime]),REMOVEFILTERS()) RETURN IF(ISBLANK(changeAmount),"An earlier snapshot is needed.",FORMAT([Top Level Open],"#,0") & " now - " & FORMAT([Top Level Open]-changeAmount,"#,0") & " before = " & FORMAT(changeAmount,"+#,0;-#,0;0") & UNICHAR(10) & "vs " & FORMAT(referenceDate,"dd MMM yyyy HH:mm") & " | " & FORMAT(endSnapshotTime-referenceDate,"0.0") & " days")
+
+-- Top Level Reduction Color
+Top Level Reduction Color =
+VAR changeAmount = [Top Level Net Reduction] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,"#A4B7CA",changeAmount<0,"#EF7181","#42D3BC")
+
+-- Top Level Recent Color
+Top Level Recent Color =
+VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,"#A4B7CA",changeAmount>0,"#EF7181","#42D3BC")
+
+-- Top Level Reduction Color Light
+Top Level Reduction Color Light =
+VAR changeAmount = [Top Level Net Reduction] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,"#52657B",changeAmount<0,"#C33D55","#087F75")
+
+-- Top Level Recent Color Light
+Top Level Recent Color Light =
+VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,"#52657B",changeAmount>0,"#C33D55","#087F75")
+
+-- Top Level Trend | Format: #,0
+Top Level Trend =
+CALCULATE(SUM(OperationalProgress[Actionable]), REMOVEFILTERS(Tests), REMOVEFILTERS(ReportingPeriod), REMOVEFILTERS(PeriodDates))
+
+-- Top Level Data Note
+Top Level Data Note =
+VAR pendingAlerts = CALCULATE([Quality Action Required], REMOVEFILTERS()) RETURN IF(pendingAlerts>0,"DATA REVIEW: " & FORMAT(pendingAlerts,"#,0") & " alerts need attention. Treat progress as provisional.","DATA NOTE: Resolved includes items missing from the next export. This is a work-list reduction, not verified construction completion.")

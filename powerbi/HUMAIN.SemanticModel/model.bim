@@ -2126,6 +2126,131 @@
             "name": "Quality Alerts Banner",
             "expression": "VAR flags = CALCULATE([Quality Flags],REMOVEFILTERS(Tests)) VAR pending = CALCULATE([Quality Action Required],REMOVEFILTERS(Tests)) RETURN IF([Period Snapshots]=0,\"NO EXPORT IN PERIOD | Movement = 0; stock is last known. Check snapshot date.\",IF(pending>0,\"QUALITY ALERTS | \" & FORMAT(pending,\"0\") & \" quality alerts require action. Review in Tracker.\",IF(flags>0,\"QUALITY ALERTS REVIEWED | \" & FORMAT(flags,\"0\") & \" original quality alerts retained; none require action in period.\",\"QUALITY CHECK | No rule triggered; export completeness is not guaranteed.\")))",
             "displayFolder": "Executive review 2026-09-28"
+          },
+          {
+            "name": "Top Level Start",
+            "expression": "CALCULATE([Actionable Previous], REMOVEFILTERS())",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Open",
+            "expression": "CALCULATE([Actionable Open], REMOVEFILTERS())",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Added",
+            "expression": "CALCULATE([New Actionable] + [Returned to Action], REMOVEFILTERS())",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Resolved",
+            "expression": "CALCULATE([Actionable Resolved], REMOVEFILTERS())",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Accepted",
+            "expression": "CALCULATE([Actionable Approved], REMOVEFILTERS())",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Net Reduction",
+            "expression": "[Top Level Start] - [Top Level Open]",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Change Amount",
+            "expression": "ABS([Top Level Net Reduction])",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Reduction Rate",
+            "expression": "DIVIDE([Top Level Change Amount], [Top Level Start])",
+            "displayFolder": "Top Level",
+            "formatString": "0.0%"
+          },
+          {
+            "name": "Top Level Change Title",
+            "expression": "IF([Top Level Net Reduction] < 0, \"MORE OPEN THAN AT START\", \"FEWER OPEN THAN AT START\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Rate Title",
+            "expression": "IF([Top Level Net Reduction] < 0, \"INCREASE FROM START\", \"REDUCTION FROM START\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Rate Caption",
+            "expression": "IF(ISBLANK([Top Level Reduction Rate]), \"No starting work: percentage unavailable\", FORMAT([Top Level Change Amount],\"#,0\") & \" / \" & FORMAT([Top Level Start],\"#,0\") & \" = \" & FORMAT([Top Level Reduction Rate],\"0.0%\"))",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Window Caption",
+            "expression": "VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) VAR endSnapshotTime = CALCULATE(MAX(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(ISBLANK(endSnapshotTime), \"No snapshots available\", \"WHOLE PROJECT  |  \" & FORMAT(startSnapshotTime,\"dd MMM yyyy\") & \" - \" & FORMAT(endSnapshotTime,\"dd MMM yyyy\") & \"  |  Updated \" & FORMAT(endSnapshotTime,\"HH:mm\"))",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Start Caption",
+            "expression": "VAR startSnapshotTime = CALCULATE(MIN(Snapshots[SnapshotDateTime]), REMOVEFILTERS()) RETURN IF(NOT ISBLANK(startSnapshotTime), \"First tracked snapshot: \" & FORMAT(startSnapshotTime,\"dd MMM yyyy\"), \"No starting snapshot\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Balance Caption",
+            "expression": "VAR closingBalance = [Top Level Start]+[Top Level Added]-[Top Level Resolved]-[Top Level Accepted] RETURN IF(ISBLANK([Top Level Open]), \"No snapshots available\", IF(closingBalance <> [Top Level Open], \"Balance needs review: check export scope before reporting progress.\", FORMAT([Top Level Start],\"#,0\") & \" + \" & FORMAT([Top Level Added],\"#,0\") & \" - \" & FORMAT([Top Level Resolved],\"#,0\") & \" - \" & FORMAT([Top Level Accepted],\"#,0\") & \" = \" & FORMAT([Top Level Open],\"#,0\") & \" open now\"))",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Recent Change",
+            "expression": "CALCULATE([Actionable Change 7d], REMOVEFILTERS())",
+            "displayFolder": "Top Level",
+            "formatString": "+#,0;-#,0;0"
+          },
+          {
+            "name": "Top Level Recent Title",
+            "expression": "VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount),\"NO RECENT COMPARISON\",changeAmount>0,\"MORE OPEN RECENTLY\",changeAmount<0,\"FEWER OPEN RECENTLY\",\"NO RECENT CHANGE\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Recent Caption",
+            "expression": "VAR changeAmount = [Top Level Recent Change] VAR referenceDate = CALCULATE([Actionable Comparison Snapshot 7d],REMOVEFILTERS()) VAR endSnapshotTime = CALCULATE(MAX(Snapshots[SnapshotDateTime]),REMOVEFILTERS()) RETURN IF(ISBLANK(changeAmount),\"An earlier snapshot is needed.\",FORMAT([Top Level Open],\"#,0\") & \" now - \" & FORMAT([Top Level Open]-changeAmount,\"#,0\") & \" before = \" & FORMAT(changeAmount,\"+#,0;-#,0;0\") & UNICHAR(10) & \"vs \" & FORMAT(referenceDate,\"dd MMM yyyy HH:mm\") & \" | \" & FORMAT(endSnapshotTime-referenceDate,\"0.0\") & \" days\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Reduction Color",
+            "expression": "VAR changeAmount = [Top Level Net Reduction] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,\"#A4B7CA\",changeAmount<0,\"#EF7181\",\"#42D3BC\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Recent Color",
+            "expression": "VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,\"#A4B7CA\",changeAmount>0,\"#EF7181\",\"#42D3BC\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Reduction Color Light",
+            "expression": "VAR changeAmount = [Top Level Net Reduction] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,\"#52657B\",changeAmount<0,\"#C33D55\",\"#087F75\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Recent Color Light",
+            "expression": "VAR changeAmount = [Top Level Recent Change] RETURN SWITCH(TRUE(),ISBLANK(changeAmount) || changeAmount=0,\"#52657B\",changeAmount>0,\"#C33D55\",\"#087F75\")",
+            "displayFolder": "Top Level"
+          },
+          {
+            "name": "Top Level Trend",
+            "expression": "CALCULATE(SUM(OperationalProgress[Actionable]), REMOVEFILTERS(Tests), REMOVEFILTERS(ReportingPeriod), REMOVEFILTERS(PeriodDates))",
+            "displayFolder": "Top Level",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Top Level Data Note",
+            "expression": "VAR pendingAlerts = CALCULATE([Quality Action Required], REMOVEFILTERS()) RETURN IF(pendingAlerts>0,\"DATA REVIEW: \" & FORMAT(pendingAlerts,\"#,0\") & \" alerts need attention. Treat progress as provisional.\",\"DATA NOTE: Resolved includes items missing from the next export. This is a work-list reduction, not verified construction completion.\")",
+            "displayFolder": "Top Level"
           }
         ],
         "partitions": [

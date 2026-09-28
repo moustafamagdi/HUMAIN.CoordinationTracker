@@ -17,12 +17,15 @@ If CSV cards work but 3D remains empty, check **SpeckleModelUrl** as well as Sou
 ## Pages
 
 1. Executive Overview
-2. Clash Test Performance
-3. Critical & Aging
-4. Clash Details
-5. Resolution & Approvals
-6. Snapshot Quality
-7. 3D Clash Explorer
+2. Top Level
+3. Clash Test Performance
+4. Critical & Aging
+5. Clash Details
+6. Resolution & Approvals
+7. Snapshot Quality
+8. 3D Clash Explorer
+
+**Top Level** is the presentation-sized management view: starting/current open work, explicit reduction arithmetic, added/resolved/accepted movements and the recent direction. Its whole-project scope is fixed so readers can reconcile the numbers directly. See the [page guide](../docs/top-level-page.md).
 
 The 3D register shows only clashes matching the slicers. Select one row to show its uniquely matched A/B elements; multiple selection is not supported by the 3D measures. Source matching uses normalized model filename plus Element ID. Missing or ambiguous matches are excluded. Model-version alignment remains the user's responsibility.
 

@@ -1,0 +1,151 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "TopLevel",
+  "displayName": "Top Level",
+  "displayOption": "FitToPage",
+  "height": 900,
+  "width": 1600,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0D1726'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "tl_trend",
+      "target": "tl_heading",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_window",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_subtitle",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_start",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_open",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_change",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_rate",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_start_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_open_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_change_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_rate_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_movement_heading",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_movement_period",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_added",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_resolved",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_accepted",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_added_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_resolved_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_accepted_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_balance",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_recent",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_recent_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "tl_trend",
+      "target": "tl_data_note",
+      "type": "NoFilter"
+    }
+  ]
+}
